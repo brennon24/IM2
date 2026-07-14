@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+/*index.html (Home Page) */
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOLCI</title>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="menu.html">Menu</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="login.html">Login</a>
+    </nav>
+
+    <h1>Welcome to DOLCI</h1>
+
+    <p>&copy; 2026 DOLCI</p>
+
+</body>
+</html>
