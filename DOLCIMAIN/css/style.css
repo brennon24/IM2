@@ -724,3 +724,168 @@ textarea {
     order: 2;
   }
 }
+
+/* =====================================
+   Cupcake Loader
+===================================== */
+
+#loader {
+  position: fixed;
+
+  inset: 0;
+
+  background: var(--cream);
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  z-index: 99999;
+
+  transition:
+    opacity 0.5s ease,
+    visibility 0.5s ease;
+}
+
+#loader.hidden {
+  opacity: 0;
+
+  visibility: hidden;
+}
+
+/* Cupcake */
+
+.cupcake {
+  position: relative;
+
+  width: 120px;
+
+  height: 150px;
+
+  animation: bounce 1.8s ease-in-out infinite;
+}
+
+/* Frosting */
+
+.frosting {
+  position: absolute;
+
+  width: 120px;
+
+  height: 70px;
+
+  background: var(--pink-bubble);
+
+  border-radius: 60px 60px 35px 35px;
+
+  top: 0;
+
+  box-shadow: inset 0 -8px rgba(255, 255, 255, 0.15);
+}
+
+/* Wrapper */
+
+.wrapper {
+  position: absolute;
+
+  bottom: 0;
+
+  left: 18px;
+
+  width: 84px;
+
+  height: 80px;
+
+  background: linear-gradient(to bottom, #f3b56d, #df9d50);
+
+  clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%);
+}
+
+/* Sprinkles */
+
+.sprinkles span {
+  position: absolute;
+
+  width: 6px;
+
+  height: 12px;
+
+  border-radius: 6px;
+}
+
+.sprinkles span:nth-child(1) {
+  background: #fff;
+
+  top: 18px;
+  left: 20px;
+}
+
+.sprinkles span:nth-child(2) {
+  background: #ffe066;
+
+  top: 30px;
+  left: 48px;
+}
+
+.sprinkles span:nth-child(3) {
+  background: #b7f7b7;
+
+  top: 15px;
+  left: 72px;
+}
+
+.sprinkles span:nth-child(4) {
+  background: #89d6ff;
+
+  top: 32px;
+  left: 92px;
+}
+
+.sprinkles span:nth-child(5) {
+  background: #fff;
+
+  top: 42px;
+  left: 35px;
+}
+
+/* Text */
+
+#loader h2 {
+  margin-top: 35px;
+
+  font-family: var(--font-display);
+
+  color: var(--pink-bubble);
+
+  font-size: 2rem;
+
+  animation: pulseText 1.5s infinite;
+}
+
+/* Animations */
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes pulseText {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
