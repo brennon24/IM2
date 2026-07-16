@@ -316,11 +316,13 @@ textarea:focus {
   padding: 24px;
   text-align: center;
   box-shadow: var(--shadow-soft);
+  border: 3px solid transparent;
   transition: 0.2s;
 }
 
 .menu-card:hover {
   transform: translateY(-6px);
+  border-color: var(--pink-soft);
 }
 
 .menu-card h3 {
