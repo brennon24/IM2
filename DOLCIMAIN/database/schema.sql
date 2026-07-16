@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 -- =========================================================
 -- DOLCI: Cake Ordering and Inventory System
 -- Full Database Schema (MySQL / phpMyAdmin compatible)
@@ -127,3 +128,6 @@ CREATE TABLE REVIEW (
  
 -- INSERT INTO CAKE_MENU (CakeName, Flavor, Filling, Size, Price, FeaturedCake, Availability, CakeTier) VALUES
 -- ('Chocolate Truffle', 'Chocolate', 'Chocolate Ganache', '8 inch', 850.00, 1, 1, 'Premium');
+=======
+<!--pls put database schema and stuff here-->
+>>>>>>> 4a07a192215819fc3c5f1a1426b919118bb32770
