@@ -77,7 +77,7 @@
         <h2 class="section-title">Choose Your Cake</h2>
 
         <div class="menu-grid">
-          <div class="menu-card selected">
+          <div class="menu-card">
             <h3>Chocolate Cake</h3>
             <p>Rich chocolate sponge with silky ganache.</p>
             <p class="price">Starts at ₱500</p>
@@ -244,5 +244,18 @@
       <p>&copy; 2026 DOLCI</p>
     </footer>
     <script src="js/loader.js"></script>
+    <script>
+      const menuCards = document.querySelectorAll(".menu-card");
+      menuCards.forEach((card) => {
+        card.addEventListener("click", () => {
+          menuCards.forEach((c) => c.classList.remove("selected"));
+          card.classList.add("selected");
+        });
+      });
+
+      if (menuCards.length) {
+        menuCards[0].classList.add("selected");
+      }
+    </script>
   </body>
 </html>
