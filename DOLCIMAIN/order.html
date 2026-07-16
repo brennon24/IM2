@@ -1,22 +1,42 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DOLCI Order</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
 
   <body>
+    <div id="loader">
+      <div class="cupcake">
+        <div class="frosting"></div>
+
+        <div class="sprinkles">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <div class="wrapper"></div>
+      </div>
+
+      <h2>Preparing something sweet...</h2>
+    </div>
+
     <nav>
-      <a href="index.html" class="active">DOLCI</a>
+      <a href="index.html" class="logo">DOLCI</a>
 
       <div class="nav-links">
         <a href="index.html">Home</a>
         <a href="menu.html">Menu</a>
-        <a href="order.html">Order</a>
+        <a href="order.html" class="active">Order</a>
         <a href="cart.html">Cart</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
-        <a href="login.html" class="login-link">Login</a>
+        <a href="auth/login.php" class="login-link">Login</a>
       </div>
     </nav>
 
@@ -44,6 +64,7 @@
       C60,34 60,10 0,10 Z"
       />
     </svg>
+
     <main class="page-container">
       <h1 class="page-title">Place an Order</h1>
 
@@ -70,5 +91,10 @@
         </form>
       </div>
     </main>
+
+    <footer>
+      <p>&copy; 2026 DOLCI</p>
+    </footer>
+    <script src="js/loader.js"></script>
   </body>
 </html>

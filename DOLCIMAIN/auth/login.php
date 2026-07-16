@@ -1,28 +1,57 @@
 <!DOCTYPE html>
-<html>
+<!-- login.php -->
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOLCI - Login</title>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
 
-<h2>Login</h2>
+    <nav>
+        <a href="../index.html" class="logo">DOLCI</a>
+        <div class="nav-links">
+            <a href="../index.html">Home</a>
+            <a href="../menu.html">Menu</a>
+            <a href="../about.html">About</a>
+            <a href="../contact.html">Contact</a>
+            <a href="login.php" class="login-link">Login</a>
+        </div>
+    </nav>
 
-<form method="POST">
+    <main class="page-container">
+        <h1 class="page-title">Welcome Back!</h1>
+        <p class="page-subtitle">Log in to place orders and manage your account.</p>
 
-    Username:<br>
-    <input type="text" name="username"><br><br>
+        <div class="card" style="max-width: 500px; margin: auto">
+            <form method="POST">
 
-    Password:<br>
-    <input type="password" name="password"><br><br>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username">
+                </div>
 
-    <input type="submit" value="Login">
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password">
+                </div>
 
-</form>
+                <button type="submit" class="btn btn-primary" style="width: 100%">Login</button>
 
-<p>
-No account?
-<a href="register.php">Register</a>
-</p>
+            </form>
+
+            <p style="text-align: center; margin-top: 24px; margin-bottom: 0; color: var(--cocoa-soft);">
+                Don't have an account?
+                <a href="register.php" style="color: var(--pink-bubble); font-weight: 700; text-decoration: none;">Sign Up</a>
+            </p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 DOLCI</p>
+    </footer>
 
 </body>
 </html>
