@@ -1,10 +1,3 @@
-<<<<<<< HEAD
--- =========================================================
--- DOLCI: Cake Ordering and Inventory System
--- Full Database Schema (MySQL / phpMyAdmin compatible)
--- Includes base tables + CakeText/Layers customization columns
--- =========================================================
- 
 DROP DATABASE IF EXISTS dolci_db;
 CREATE DATABASE dolci_db;
 USE dolci_db;
@@ -63,6 +56,24 @@ CREATE TABLE `ORDER` (
     FOREIGN KEY (AdminID) REFERENCES ADMIN(AdminID)
         ON UPDATE CASCADE ON DELETE SET NULL
 );
+
+CREATE TABLE CART (
+    CartID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL,
+    CakeID INT NOT NULL,
+    Flavor VARCHAR(50),
+    Layers INT NOT NULL DEFAULT 1,
+    Icing VARCHAR(100),
+    Filling VARCHAR(100),
+    Decorations TEXT,
+    CakeText VARCHAR(150),
+    Quantity INT DEFAULT 1,
+    TotalPrice DECIMAL(10,2),
+    DateAdded DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (UserID) REFERENCES USER_ACCOUNT(UserID),
+    FOREIGN KEY (CakeID) REFERENCES CAKE_MENU(CakeID)
+);
  
 -- =========================================================
 -- ORDERLIST (line items of an order)
@@ -113,6 +124,14 @@ CREATE TABLE REVIEW (
     FOREIGN KEY (UserID) REFERENCES USER_ACCOUNT(UserID)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+INSERT INTO CAKE_MENU (CakeName, Flavor, Filling, Size, Price)
+VALUES
+('Vanilla Cake','Vanilla','Vanilla Cream','8 inch',500),
+('Chocolate Cake','Chocolate','Chocolate Mousse','8 inch',550),
+('Strawberry Cake','Strawberry','Fresh Strawberries','8 inch',600),
+('Red Velvet Cake','Red Velvet','Cream Cheese','8 inch',650),
+('Mango Cake','Mango','Mango Cream','8 inch',600);
  
 -- =========================================================
 -- OPTIONAL: Sample seed data
@@ -128,6 +147,3 @@ CREATE TABLE REVIEW (
  
 -- INSERT INTO CAKE_MENU (CakeName, Flavor, Filling, Size, Price, FeaturedCake, Availability, CakeTier) VALUES
 -- ('Chocolate Truffle', 'Chocolate', 'Chocolate Ganache', '8 inch', 850.00, 1, 1, 'Premium');
-=======
-<!--pls put database schema and stuff here-->
->>>>>>> 4a07a192215819fc3c5f1a1426b919118bb32770

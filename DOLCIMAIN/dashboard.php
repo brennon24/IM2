@@ -23,14 +23,14 @@ $stmt->close();
 </head>
 <body>
 <nav>
-    <a href="index.html" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
+    <a href="index.php" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
     <div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="menu.html">Menu</a>
-        <a href="order.html">Order</a>
-        <a href="cart.html">Cart</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
+        <a href="index.php">Home</a>
+        <a href="menu.php">Menu</a>
+        <a href="order.php">Order</a>
+        <a href="cart.php">Cart</a>
+        <a href="about.php">About</a>
+        <a href="contact.php">Contact</a>
         <a href="dashboard.php" class="login-link active">My Account</a>
     </div>
 </nav>

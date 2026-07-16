@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DOLCI Cart</title>
+    <title>About DOLCI</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
 
@@ -27,16 +27,15 @@
     </div>
 
     <nav>
-      <a href="index.html" class="logo">DOLCI</a>
+      <a href="index.php" class="logo">DOLCI</a>
 
       <div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="menu.html">Menu</a>
-        <a href="order.html">Order</a>
-        <a href="cart.html" class="active">Cart</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-        <a href="auth/login.php" class="login-link">Login</a>
+        <a href="index.php">Home</a>
+        <a href="menu.php">Menu</a>
+        <a href="cart.php">Cart</a>
+        <a href="about.php" class="active">About</a>
+        <a href="contact.php">Contact</a>
+        <a href="login.php" class="login-link">Login</a>
       </div>
     </nav>
 
@@ -66,16 +65,19 @@
     </svg>
 
     <main class="page-container">
-      <h1 class="page-title">Your Cart</h1>
+      <h1 class="page-title">About DOLCI</h1>
 
-      <div class="card cart-empty">
-        <h2>No goodies yet 🍰</h2>
-
+      <div class="info-card">
         <p>
-          Looks like your cart is empty. Start browsing our delicious cakes.
+          DOLCI is a modern cake ordering and inventory management system
+          designed to make ordering custom cakes simple, fast, and enjoyable.
         </p>
 
-        <a class="btn btn-primary" href="menu.html"> Browse Menu </a>
+        <p>
+          Customers can browse our menu, customize their cakes, place orders,
+          and monitor their order status, while bakery staff efficiently manage
+          inventory and incoming orders through one unified platform.
+        </p>
       </div>
     </main>
 

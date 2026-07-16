@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DOLCI Order</title>
+    <title>Contact DOLCI</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
 
@@ -27,16 +27,15 @@
     </div>
 
     <nav>
-      <a href="index.html" class="logo">DOLCI</a>
+      <a href="index.php" class="logo">DOLCI</a>
 
       <div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="menu.html">Menu</a>
-        <a href="order.html" class="active">Order</a>
-        <a href="cart.html">Cart</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
- <a href="login.php" class="login-link">Login</a>
+        <a href="index.php">Home</a>
+        <a href="menu.php">Menu</a>
+        <a href="cart.php">Cart</a>
+        <a href="about.php">About</a>
+        <a href="contact.php" class="active">Contact</a>
+        <a href="login.php" class="login-link">Login</a>
       </div>
     </nav>
 
@@ -66,29 +65,24 @@
     </svg>
 
     <main class="page-container">
-      <h1 class="page-title">Place an Order</h1>
+      <h1 class="page-title">Contact Us</h1>
 
-      <p class="page-subtitle">Fill in your order details below.</p>
+      <div class="info-card">
+        <p>
+          <strong>Email</strong><br />
+          dolci@gmail.com
+        </p>
 
-      <div class="card">
-        <form>
-          <div class="form-group">
-            <label>Name</label>
-            <input type="text" />
-          </div>
+        <p>
+          <strong>Phone</strong><br />
+          09XXXXXXXXX
+        </p>
 
-          <div class="form-group">
-            <label>Product</label>
-            <input type="text" />
-          </div>
-
-          <div class="form-group">
-            <label>Quantity</label>
-            <input type="number" />
-          </div>
-
-          <button class="btn btn-primary">Place Order</button>
-        </form>
+        <p>
+          <strong>Business Hours</strong><br />
+          Monday – Saturday<br />
+          8:00 AM – 6:00 PM
+        </p>
       </div>
     </main>
 

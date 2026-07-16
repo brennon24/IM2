@@ -28,7 +28,7 @@
     </div>
     <nav>
       <a
-        href="index.html"
+        href="index.php"
         class="logo"
         style="
           font-family: var(--font-display);
@@ -41,13 +41,12 @@
         >DOLCI</a
       >
       <div class="nav-links">
-        <a href="index.html" class="active">Home</a>
-        <a href="menu.html">Menu</a>
-        <a href="order.html">Order</a>
-        <a href="cart.html">Cart</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
- <a href="login.php" class="login-link">Login</a>
+        <a href="index.php" class="active">Home</a>
+        <a href="menu.php">Menu</a>
+        <a href="cart.php">Cart</a>
+        <a href="about.php">About</a>
+        <a href="contact.php">Contact</a>
+        <a href="login.php" class="login-link">Login</a>
       </div>
     </nav>
 
@@ -85,8 +84,8 @@
           date, and let us handle the rest.
         </p>
         <div class="hero-actions">
-          <a href="menu.html" class="btn btn-primary">Order a Cake</a>
-          <a href="about.html" class="btn btn-secondary">See How It Works</a>
+          <a href="menu.php" class="btn btn-primary">Order a Cake</a>
+          <a href="about.php" class="btn btn-secondary">See How It Works</a>
         </div>
       </section>
 
@@ -123,7 +122,7 @@
               <strong>₱550</strong>
             </div>
 
-            <a href="menu.html" class="btn btn-primary">
+            <a href="menu.php" class="btn btn-primary">
               Order Today's Special
             </a>
           </div>
