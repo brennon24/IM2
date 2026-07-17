@@ -1,0 +1,4 @@
+USE dolci_db;
+
+ALTER TABLE CART
+    ADD COLUMN Size VARCHAR(50) DEFAULT '8 inch' AFTER Flavor;
