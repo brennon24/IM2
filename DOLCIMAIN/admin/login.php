@@ -36,9 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <nav>
-    <a href="../index.html" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
+    <a href="../index.php" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
     <div class="nav-links">
-        <a href="../index.html">Customer Site</a>
+        <a href="../index.php">Customer Site</a>
     </div>
 </nav>
 

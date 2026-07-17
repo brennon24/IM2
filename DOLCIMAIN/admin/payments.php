@@ -88,7 +88,7 @@ if ($search !== "") {
         <a href="reviews.php">Reviews</a>
         <a href="users.php">Customers</a>
         <a href="admins.php">Admin/Staff</a>
-        <a href="../index.html">View Customer Site</a>
+        <a href="../index.php">View Customer Site</a>
         <a href="logout.php">Logout</a>
     </div>
 </nav>

@@ -83,6 +83,28 @@ if ($conn->connect_error) {
         TotalPrice DECIMAL(10,2),
         FOREIGN KEY (OrderID) REFERENCES `ORDER`(OrderID) ON DELETE CASCADE,
         FOREIGN KEY (CakeID) REFERENCES CAKE_MENU(CakeID)
+    )",
+    "CREATE TABLE IF NOT EXISTS PAYMENT (
+        PaymentID INT AUTO_INCREMENT PRIMARY KEY,
+        OrderID INT NOT NULL UNIQUE,
+        Account VARCHAR(100),
+        PaymentDate DATETIME,
+        PaymentMethod VARCHAR(50),
+        PaymentStatus VARCHAR(50) DEFAULT 'Unpaid',
+        FOREIGN KEY (OrderID) REFERENCES `ORDER`(OrderID)
+            ON UPDATE CASCADE ON DELETE CASCADE
+    )",
+    "CREATE TABLE IF NOT EXISTS REVIEW (
+        ReviewID INT AUTO_INCREMENT PRIMARY KEY,
+        CakeID INT NOT NULL,
+        UserID INT NOT NULL,
+        RatingEmoji VARCHAR(10),
+        ReviewText TEXT,
+        ReviewDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (CakeID) REFERENCES CAKE_MENU(CakeID)
+            ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (UserID) REFERENCES USER_ACCOUNT(UserID)
+            ON UPDATE CASCADE ON DELETE CASCADE
     )"
 ];
 
