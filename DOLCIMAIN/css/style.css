@@ -1245,3 +1245,88 @@ textarea {
   border-radius: 14px;
   margin-bottom: 22px;
 }
+
+/* =====================================
+   Checkout Page
+===================================== */
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.checkout-summary {
+  position: sticky;
+  top: 20px;
+}
+
+.payment-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--cream);
+  border: 2px solid var(--pink-soft);
+  border-radius: 16px;
+  padding: 18px;
+  cursor: not-allowed; /* Disabled since COD is the only option currently */
+}
+
+.payment-option.selected {
+  border-color: var(--pink-bubble);
+  background: #fff7fb;
+}
+
+.payment-option label {
+  font-family: var(--font-display);
+  color: var(--pink-bubble);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.payment-option input[type="radio"] {
+  accent-color: var(--pink-bubble);
+  transform: scale(1.2);
+  margin-bottom: 4px;
+}
+
+.payment-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--cocoa-soft);
+}
+
+/* =====================================
+   Order Status Badges
+===================================== */
+
+.order-status {
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-pending {
+  background: #fff1dc;
+  color: var(--gold-deep);
+}
+
+.status-completed {
+  background: #e3ffe3;
+  color: #2e8b2e;
+}
+
+.status-cancelled {
+  background: #ffe3e3;
+  color: #b3261e;
+}

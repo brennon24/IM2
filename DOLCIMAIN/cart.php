@@ -2,25 +2,25 @@
 session_start();
 require_once __DIR__ . '/auth/database.php'; // expects $conn (mysqli)
 
-$loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
+ $loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
 if (!$loggedIn) {
     header('Location: login.php');
     exit;
 }
 
-$userId = (int) ($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);
+ $userId = (int) ($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);
 
-$cart = [];
-$stmt = $conn->prepare("SELECT * FROM CART WHERE UserID = ? ORDER BY DateAdded DESC");
-$stmt->bind_param('i', $userId);
-$stmt->execute();
-$result = $stmt->get_result();
+ $cart = [];
+ $stmt = $conn->prepare("SELECT * FROM CART WHERE UserID = ? ORDER BY DateAdded DESC");
+ $stmt->bind_param('i', $userId);
+ $stmt->execute();
+ $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
     $cart[] = $row;
 }
-$stmt->close();
+ $stmt->close();
 
-$grandTotal = array_reduce($cart, function ($sum, $item) {
+ $grandTotal = array_reduce($cart, function ($sum, $item) {
     return $sum + (float) $item['TotalPrice'];
 }, 0);
 
@@ -57,21 +57,25 @@ function decodeMaybeJson($value)
     </div>
 
     <nav>
-      <a href="index.php" class="logo">DOLCI</a>
-      <div class="nav-links">
+    <a href="index.php" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
+    <div class="nav-links">
         <a href="index.php">Home</a>
         <a href="menu.php">Menu</a>
-        <a href="cart.php" class="active">Cart</a>
+        <a href="order_history.php">Orders</a>
+        <a href="cart.php">Cart</a>
         <a href="about.php">About</a>
         <a href="contact.php">Contact</a>
-        <?php if ($loggedIn): ?>
+        <?php 
+            // For pages that have the $loggedIn check, keep the Profile/Logout buttons:
+            $loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
+            if ($loggedIn): ?>
           <a href="dashboard.php" class="login-link">Profile</a>
           <a href="logout.php" class="login-link">Logout</a>
         <?php else: ?>
           <a href="login.php" class="login-link">Login</a>
         <?php endif; ?>
-      </div>
-    </nav>
+    </div>
+</nav>
 
     <svg
       class="icing-drip"
@@ -183,10 +187,10 @@ function decodeMaybeJson($value)
         <br />
 
         <div style="text-align: center">
-          <button class="btn btn-primary" disabled>
-            Proceed to Checkout (coming soon)
-          </button>
-        </div>
+  <a class="btn btn-primary" href="checkout.php">
+    Proceed to Checkout
+  </a>
+</div>
 
       <?php endif; ?>
     </main>

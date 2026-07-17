@@ -31,22 +31,25 @@ $loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
     </div>
 
     <nav>
-      <a href="index.php" class="logo">DOLCI</a>
-
-      <div class="nav-links">
+    <a href="index.php" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
+    <div class="nav-links">
         <a href="index.php">Home</a>
         <a href="menu.php">Menu</a>
+        <a href="order_history.php">Orders</a>
         <a href="cart.php">Cart</a>
         <a href="about.php">About</a>
-        <a href="contact.php" class="active">Contact</a>
-        <?php if ($loggedIn): ?>
+        <a href="contact.php">Contact</a>
+        <?php 
+            // For pages that have the $loggedIn check, keep the Profile/Logout buttons:
+            $loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
+            if ($loggedIn): ?>
           <a href="dashboard.php" class="login-link">Profile</a>
           <a href="logout.php" class="login-link">Logout</a>
         <?php else: ?>
           <a href="login.php" class="login-link">Login</a>
         <?php endif; ?>
-      </div>
-    </nav>
+    </div>
+</nav>
 
     <svg
       class="icing-drip"

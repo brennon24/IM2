@@ -1,6 +1,6 @@
 <?php
 session_start();
-$loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
+ $loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
 ?>
 <!doctype html>
 <!-- index.html (Home Page) -->
@@ -47,6 +47,7 @@ $loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
       <div class="nav-links">
         <a href="index.php" class="active">Home</a>
         <a href="menu.php">Menu</a>
+        <a href="order_history.php">Orders</a>
         <a href="cart.php">Cart</a>
         <a href="about.php">About</a>
         <a href="contact.php">Contact</a>

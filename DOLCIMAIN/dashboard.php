@@ -7,11 +7,11 @@ if (!isset($_SESSION['UserID'])) {
     exit;
 }
 
-$stmt = $conn->prepare("SELECT FullName, Email, ContactNumber, DateRegistered FROM USER_ACCOUNT WHERE UserID = ?");
-$stmt->bind_param("i", $_SESSION['UserID']);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
-$stmt->close();
+ $stmt = $conn->prepare("SELECT FullName, Email, ContactNumber, DateRegistered FROM USER_ACCOUNT WHERE UserID = ?");
+ $stmt->bind_param("i", $_SESSION['UserID']);
+ $stmt->execute();
+ $user = $stmt->get_result()->fetch_assoc();
+ $stmt->close();
 ?>
 <!doctype html>
 <html lang="en">
@@ -27,7 +27,7 @@ $stmt->close();
     <div class="nav-links">
         <a href="index.php">Home</a>
         <a href="menu.php">Menu</a>
-        <a href="order.php">Order</a>
+        <a href="order_history.php">Orders</a>
         <a href="cart.php">Cart</a>
         <a href="about.php">About</a>
         <a href="contact.php">Contact</a>
