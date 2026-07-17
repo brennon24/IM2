@@ -129,6 +129,7 @@ function decodeMaybeJson($value)
               </div>
 
               <div class="cart-item-details">
+                <p><strong>Size:</strong> <?= htmlspecialchars($item['Size'] ?? '8 inch') ?></p>
                 <p><strong>Tiers:</strong> <?= (int) $item['Layers'] ?></p>
 
                 <?php if ($isPerLayer): ?>

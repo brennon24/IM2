@@ -19,6 +19,7 @@ if (!$cartId) {
 
 $cakeId = (int) ($data['cakeId'] ?? 0);
 $flavor = $data['flavor'] ?? '';
+$size = $data['size'] ?? '8 inch';
 $layers = (int) ($data['tiers'] ?? 1);
 $icing = is_array($data['icing'] ?? null) ? json_encode($data['icing']) : ($data['icing'] ?? '');
 $filling = is_array($data['filling'] ?? null) ? json_encode($data['filling']) : ($data['filling'] ?? '');
@@ -29,13 +30,14 @@ $totalPrice = (float) ($data['total'] ?? 0);
 // UserID is included in the WHERE clause so a user can only ever edit their own cart rows
 $stmt = $conn->prepare(
     "UPDATE CART
-     SET CakeID = ?, Flavor = ?, Layers = ?, Icing = ?, Filling = ?, Decorations = ?, CakeText = ?, TotalPrice = ?
+     SET CakeID = ?, Flavor = ?, Size = ?, Layers = ?, Icing = ?, Filling = ?, Decorations = ?, CakeText = ?, TotalPrice = ?
      WHERE CartID = ? AND UserID = ?"
 );
 $stmt->bind_param(
-    'isissssdii',
+    'ississssdii',
     $cakeId,
     $flavor,
+    $size,
     $layers,
     $icing,
     $filling,

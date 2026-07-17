@@ -24,6 +24,7 @@ if (isset($_GET['edit']) && (!empty($_SESSION['user_id']) || !empty($_SESSION['U
             'cakeId' => (int) $row['CakeID'],
             'flavor' => $row['Flavor'],
             'base_price' => null, // resolved client-side from the matching flavor card
+            'size' => $row['Size'] ?? '8 inch',
             'tiers' => (int) $row['Layers'],
             'icing' => $isPerLayer ? $decodedIcing : $row['Icing'],
             'filling' => $isPerLayer ? $decodedFilling : $row['Filling'],
@@ -171,6 +172,38 @@ if (isset($_GET['edit']) && (!empty($_SESSION['user_id']) || !empty($_SESSION['U
 
       <br />
 
+      <!-- Size -->
+      <section class="card">
+        <div class="section-header">
+          <h2 class="section-title">Choose Your Size</h2>
+          <span class="price-tag" id="sizePriceTag">+₱0</span>
+        </div>
+        <p class="page-subtitle" style="margin-bottom: 20px">
+          Priced relative to our standard 8-inch cake.
+        </p>
+
+        <div class="size-grid" id="sizeGrid">
+          <button type="button" class="size-card" data-diameter="6" data-price="-100">
+            <strong>6"</strong>
+            <span>Serves 6–8</span>
+          </button>
+          <button type="button" class="size-card selected" data-diameter="8" data-price="0">
+            <strong>8"</strong>
+            <span>Serves 10–12</span>
+          </button>
+          <button type="button" class="size-card" data-diameter="10" data-price="250">
+            <strong>10"</strong>
+            <span>Serves 15–20</span>
+          </button>
+          <button type="button" class="size-card" data-diameter="12" data-price="500">
+            <strong>12"</strong>
+            <span>Serves 25+</span>
+          </button>
+        </div>
+      </section>
+
+      <br />
+
       <!-- Tiers -->
       <section class="card">
         <div class="section-header">
@@ -188,6 +221,26 @@ if (isset($_GET['edit']) && (!empty($_SESSION['user_id']) || !empty($_SESSION['U
           <span class="tier-count" id="tierCount">1</span>
           <button type="button" id="tierPlus" aria-label="Add a tier">+</button>
         </div>
+      </section>
+
+      <br />
+
+      <!-- Size Comparison Visualization -->
+      <section class="card">
+        <div class="section-header">
+          <h2 class="section-title">Visualize Your Cake</h2>
+        </div>
+        <p class="page-subtitle" style="margin-bottom: 10px">
+          Scaled next to a standard 10-inch dinner plate for reference.
+        </p>
+
+        <div class="visual-stage">
+          <div class="visual-plate" id="visualPlate"></div>
+          <div class="visual-cake-stack" id="visualCakeStack"></div>
+          <div class="visual-ruler" id="visualRuler"></div>
+        </div>
+
+        <div class="visual-readout" id="visualReadout"></div>
       </section>
 
       <br />
@@ -293,6 +346,10 @@ if (isset($_GET['edit']) && (!empty($_SESSION['user_id']) || !empty($_SESSION['U
         <div class="price-line">
           <span id="summaryFlavorLabel">Vanilla base</span>
           <span class="amount" id="summaryFlavorPrice">₱500</span>
+        </div>
+        <div class="price-line">
+          <span id="summarySizeLabel">8" size</span>
+          <span class="amount" id="summarySizePrice">+₱0</span>
         </div>
         <div class="price-line">
           <span id="summaryTierLabel">1 tier</span>

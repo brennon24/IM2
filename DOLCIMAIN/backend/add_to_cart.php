@@ -22,6 +22,7 @@ if (!$data || empty($data['flavor']) || empty($data['cakeId'])) {
 
 $cakeId = (int) $data['cakeId'];
 $flavor = $data['flavor'];
+$size = $data['size'] ?? '8 inch';
 $layers = (int) ($data['tiers'] ?? 1);
 
 // Per-layer mode sends an array (one entry per tier) — store as JSON.
@@ -34,14 +35,15 @@ $cakeText = $data['dedication'] ?? '';
 $totalPrice = (float) ($data['total'] ?? 0);
 
 $stmt = $conn->prepare(
-    "INSERT INTO CART (UserID, CakeID, Flavor, Layers, Icing, Filling, Decorations, CakeText, Quantity, TotalPrice)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)"
+    "INSERT INTO CART (UserID, CakeID, Flavor, Size, Layers, Icing, Filling, Decorations, CakeText, Quantity, TotalPrice)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)"
 );
 $stmt->bind_param(
-    'iisissssd',
+    'iississssd',
     $userId,
     $cakeId,
     $flavor,
+    $size,
     $layers,
     $icing,
     $filling,
