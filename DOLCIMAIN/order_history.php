@@ -7,18 +7,12 @@ if (!isset($_SESSION['UserID'])) {
     exit;
 }
 
-$stmt = $conn->prepare("
-    SELECT o.OrderID, o.OrderDate, o.OrderStatus, cm.CakeName, ol.Quantity, ol.CakeText, ol.Layers, ol.EntirePrice
-    FROM `ORDER` o
-    JOIN ORDERLIST ol ON o.OrderID = ol.OrderID
-    JOIN CAKE_MENU cm ON ol.CakeID = cm.CakeID
-    WHERE o.CustomerID = ?
-    ORDER BY o.OrderDate DESC
-");
-$stmt->bind_param("i", $_SESSION['UserID']);
-$stmt->execute();
-$orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+// Fetch all orders for this customer
+ $stmt = $conn->prepare("SELECT * FROM `ORDER` WHERE CustomerID = ? ORDER BY OrderDate DESC");
+ $stmt->bind_param("i", $_SESSION['UserID']);
+ $stmt->execute();
+ $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+ $stmt->close();
 ?>
 <!doctype html>
 <html lang="en">
@@ -30,15 +24,16 @@ $stmt->close();
 </head>
 <body>
 <nav>
-    <a href="index.html" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
+    <a href="index.php" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
     <div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="menu.html">Menu</a>
-        <a href="order.html">Order</a>
-        <a href="cart.html">Cart</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-        <a href="dashboard.php" class="login-link active">My Account</a>
+        <a href="index.php">Home</a>
+        <a href="menu.php">Menu</a>
+        <!-- Notice the "Orders" link is missing here -->
+        <a href="cart.php">Cart</a>
+        <a href="about.php">About</a>
+        <a href="contact.php">Contact</a>
+        <a href="dashboard.php" class="login-link">Profile</a>
+        <a href="logout.php" class="login-link">Logout</a>
     </div>
 </nav>
 
@@ -62,34 +57,69 @@ $stmt->close();
     <h1 class="page-title">Your Order History</h1>
     <p class="page-subtitle">Every cake you've ordered from DOLCI.</p>
 
-    <div class="card" style="max-width: 800px; margin: auto;">
-        <?php if (count($orders) === 0): ?>
-            <p style="text-align:center;">No orders yet — <a href="menu.html">browse the menu</a> to place your first one!</p>
-        <?php else: ?>
-            <table style="width:100%; border-collapse: collapse;">
-                <tr style="text-align:left; border-bottom: 2px solid var(--pink-soft);">
-                    <th style="padding:8px;">Order</th>
-                    <th style="padding:8px;">Cake</th>
-                    <th style="padding:8px;">Qty</th>
-                    <th style="padding:8px;">Layers</th>
-                    <th style="padding:8px;">Text</th>
-                    <th style="padding:8px;">Status</th>
-                    <th style="padding:8px;">Total</th>
-                </tr>
-                <?php foreach ($orders as $o): ?>
-                <tr style="border-bottom: 1px solid var(--pink-soft);">
-                    <td style="padding:8px;">#<?= $o['OrderID'] ?></td>
-                    <td style="padding:8px;"><?= htmlspecialchars($o['CakeName']) ?></td>
-                    <td style="padding:8px;"><?= $o['Quantity'] ?></td>
-                    <td style="padding:8px;"><?= $o['Layers'] ?></td>
-                    <td style="padding:8px;"><?= htmlspecialchars($o['CakeText'] ?? '—') ?></td>
-                    <td style="padding:8px;"><?= htmlspecialchars($o['OrderStatus']) ?></td>
-                    <td style="padding:8px;">₱<?= number_format($o['EntirePrice'], 2) ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </table>
-        <?php endif; ?>
-    </div>
+    <?php if (count($orders) === 0): ?>
+        <div class="card cart-empty" style="max-width: 600px; margin: auto;">
+            <h2>No orders yet 🍰</h2>
+            <p>You haven't placed any orders yet. Let's fix that!</p>
+            <a class="btn btn-primary" href="menu.php">Start an Order</a>
+        </div>
+    <?php else: ?>
+        <?php foreach ($orders as $o): 
+            // Fetch the items for THIS specific order
+            $orderId = (int) $o['OrderID'];
+            $itemStmt = $conn->prepare("SELECT * FROM ORDER_ITEM WHERE OrderID = ?");
+            $itemStmt->bind_param("i", $orderId);
+            $itemStmt->execute();
+            $items = $itemStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $itemStmt->close();
+
+            // Calculate total for this specific order
+            $orderTotal = array_reduce($items, function ($sum, $item) {
+                return $sum + (float) $item['TotalPrice'];
+            }, 0);
+        ?>
+            <div class="card" style="max-width: 800px; margin: 0 auto 30px auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--pink-soft); padding-bottom: 10px;">
+                    <div>
+                        <h3 style="margin: 0; color: var(--pink-bubble); font-family: var(--font-display);">Order #<?= $o['OrderID'] ?></h3>
+                        <small style="color: var(--cocoa-soft);"><?= date('F j, Y \a\t g:i A', strtotime($o['OrderDate'])) ?></small>
+                    </div>
+                    <span class="order-status status-<?= strtolower(htmlspecialchars($o['OrderStatus'])) ?>">
+                        <?= htmlspecialchars($o['OrderStatus']) ?>
+                    </span>
+                </div>
+
+                <p style="margin: 0 0 15px 0;"><strong>Payment Method:</strong> <?= htmlspecialchars($o['PaymentMethod']) ?></p>
+
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="text-align:left; border-bottom: 1px dashed var(--pink-soft);">
+                        <th style="padding:8px;">Cake Flavor</th>
+                        <th style="padding:8px;">Qty</th>
+                        <th style="padding:8px;">Layers</th>
+                        <th style="padding:8px;">Message</th>
+                        <th style="padding:8px; text-align:right;">Price</th>
+                    </tr>
+                    <?php foreach ($items as $item): ?>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding:8px; font-weight: 700;"><?= htmlspecialchars($item['Flavor'] ?? 'Custom Cake') ?></td>
+                        <td style="padding:8px;"><?= (int) $item['Quantity'] ?></td>
+                        <td style="padding:8px;"><?= (int) $item['Layers'] ?></td>
+                        <td style="padding:8px;"><?= htmlspecialchars($item['CakeText'] ?? '—') ?></td>
+                        <td style="padding:8px; text-align:right; color: var(--gold-deep); font-weight: 800;">₱<?= number_format((float) $item['TotalPrice'], 2) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <tr>
+                        <td colspan="4" style="padding:12px 8px; text-align:right; font-weight: 800;">Order Total:</td>
+                        <td style="padding:12px 8px; text-align:right; font-size: 1.2rem; color: var(--pink-bubble); font-weight: 800;">₱<?= number_format($orderTotal, 2) ?></td>
+                    </tr>
+                </table>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </main>
+
+<footer>
+  <p>&copy; 2026 DOLCI</p>
+</footer>
 </body>
 </html>

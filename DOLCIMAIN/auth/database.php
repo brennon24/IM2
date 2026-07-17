@@ -1,19 +1,19 @@
 <?php
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "dolci_db";
+ $host = "localhost";
+ $user = "root";
+ $password = "";
+ $database = "dolci_db";
 
-$conn = new mysqli($host, $user, $password);
+ $conn = new mysqli($host, $user, $password);
 
 if ($conn->connect_error) {
     die("Database connection failed: " . $conn->connect_error);
 }
 
-$conn->query("CREATE DATABASE IF NOT EXISTS `{$database}`");
-$conn->select_db($database);
+ $conn->query("CREATE DATABASE IF NOT EXISTS `{$database}`");
+ $conn->select_db($database);
 
-$schemaStatements = [
+ $schemaStatements = [
     "CREATE TABLE IF NOT EXISTS USER_ACCOUNT (
         UserID INT AUTO_INCREMENT PRIMARY KEY,
         FullName VARCHAR(100) NOT NULL,
@@ -62,11 +62,27 @@ $schemaStatements = [
         OrderDate DATETIME DEFAULT CURRENT_TIMESTAMP,
         CustomNote TEXT,
         OrderStatus VARCHAR(50) DEFAULT 'Pending',
+        PaymentMethod VARCHAR(50) DEFAULT 'Cash on Delivery',
         AdminID INT,
         FOREIGN KEY (CustomerID) REFERENCES USER_ACCOUNT(UserID)
             ON UPDATE CASCADE ON DELETE RESTRICT,
         FOREIGN KEY (AdminID) REFERENCES ADMIN(AdminID)
             ON UPDATE CASCADE ON DELETE SET NULL
+    )",
+    "CREATE TABLE IF NOT EXISTS ORDER_ITEM (
+        OrderItemID INT AUTO_INCREMENT PRIMARY KEY,
+        OrderID INT NOT NULL,
+        CakeID INT NOT NULL,
+        Flavor VARCHAR(50),
+        Layers INT DEFAULT 1,
+        Icing VARCHAR(255),
+        Filling VARCHAR(255),
+        Decorations TEXT,
+        CakeText VARCHAR(150),
+        Quantity INT DEFAULT 1,
+        TotalPrice DECIMAL(10,2),
+        FOREIGN KEY (OrderID) REFERENCES `ORDER`(OrderID) ON DELETE CASCADE,
+        FOREIGN KEY (CakeID) REFERENCES CAKE_MENU(CakeID)
     )"
 ];
 
@@ -74,7 +90,7 @@ foreach ($schemaStatements as $sql) {
     $conn->query($sql);
 }
 
-$menuCheck = $conn->query("SELECT COUNT(*) AS count FROM CAKE_MENU");
+ $menuCheck = $conn->query("SELECT COUNT(*) AS count FROM CAKE_MENU");
 if ($menuCheck && $menuCheck->fetch_assoc()['count'] == 0) {
     $conn->query("INSERT INTO CAKE_MENU (CakeName, Flavor, Filling, Size, Price) VALUES
         ('Vanilla Cake','Vanilla','Vanilla Cream','8 inch',500),
