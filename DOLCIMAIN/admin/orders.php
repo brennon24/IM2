@@ -49,12 +49,14 @@ if (isset($_GET['edit'])) {
 }
 
 // ---------- View line items ----------
+// Orders placed through the customer checkout flow land in ORDER_ITEM
+// (with full customization: flavor, layers, icing, filling, decorations).
 $viewItems = null;
 $viewOrderId = $_GET['view'] ?? null;
 if ($viewOrderId) {
-    $stmt = $conn->prepare("SELECT ol.*, cm.CakeName FROM ORDERLIST ol
-                            JOIN CAKE_MENU cm ON ol.CakeID = cm.CakeID
-                            WHERE ol.OrderID = ?");
+    $stmt = $conn->prepare("SELECT oi.*, cm.CakeName FROM ORDER_ITEM oi
+                            JOIN CAKE_MENU cm ON oi.CakeID = cm.CakeID
+                            WHERE oi.OrderID = ?");
     $stmt->bind_param("i", $viewOrderId);
     $stmt->execute();
     $viewItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -168,14 +170,15 @@ if ($search !== "") {
         </form>
 
         <table class="admin-table">
-            <tr><th>ID</th><th>Customer</th><th>Date</th><th>Status</th><th>Assigned To</th><th>Actions</th></tr>
-            <?php if (count($orders) === 0): ?><tr><td colspan="6">No orders found.</td></tr><?php endif; ?>
+            <tr><th>ID</th><th>Customer</th><th>Date</th><th>Status</th><th>Payment Method</th><th>Assigned To</th><th>Actions</th></tr>
+            <?php if (count($orders) === 0): ?><tr><td colspan="7">No orders found.</td></tr><?php endif; ?>
             <?php foreach ($orders as $o): ?>
             <tr>
                 <td>#<?= $o['OrderID'] ?></td>
                 <td><?= htmlspecialchars($o['CustomerName']) ?></td>
                 <td><?= $o['OrderDate'] ?></td>
                 <td><?= htmlspecialchars($o['OrderStatus']) ?></td>
+                <td><?= htmlspecialchars($o['PaymentMethod'] ?? '—') ?></td>
                 <td><?= htmlspecialchars($o['AdminName'] ?? 'Unassigned') ?></td>
                 <td>
                     <a href="orders.php?view=<?= $o['OrderID'] ?>" class="btn-small secondary">Items</a>
@@ -192,15 +195,19 @@ if ($search !== "") {
     <div class="card">
         <h2 class="section-title">Items in Order #<?= htmlspecialchars($viewOrderId) ?></h2>
         <table class="admin-table">
-            <tr><th>Cake</th><th>Quantity</th><th>Cake Text</th><th>Layers</th><th>Price</th></tr>
-            <?php if (count($viewItems) === 0): ?><tr><td colspan="5">No items found.</td></tr><?php endif; ?>
+            <tr><th>Cake</th><th>Flavor</th><th>Layers</th><th>Icing</th><th>Filling</th><th>Decorations</th><th>Cake Text</th><th>Qty</th><th>Price</th></tr>
+            <?php if (count($viewItems) === 0): ?><tr><td colspan="9">No items found.</td></tr><?php endif; ?>
             <?php foreach ($viewItems as $item): ?>
             <tr>
                 <td><?= htmlspecialchars($item['CakeName']) ?></td>
-                <td><?= $item['Quantity'] ?></td>
-                <td><?= htmlspecialchars($item['CakeText'] ?? '') ?></td>
+                <td><?= htmlspecialchars($item['Flavor']) ?></td>
                 <td><?= $item['Layers'] ?></td>
-                <td>₱<?= number_format($item['EntirePrice'], 2) ?></td>
+                <td><?= htmlspecialchars($item['Icing']) ?></td>
+                <td><?= htmlspecialchars($item['Filling']) ?></td>
+                <td><?= htmlspecialchars($item['Decorations']) ?></td>
+                <td><?= htmlspecialchars($item['CakeText'] ?? '') ?></td>
+                <td><?= $item['Quantity'] ?></td>
+                <td>₱<?= number_format($item['TotalPrice'], 2) ?></td>
             </tr>
             <?php endforeach; ?>
         </table>
