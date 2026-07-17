@@ -1,128 +1,147 @@
 <?php
 session_start();
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/database.php'; // expects $conn (mysqli)
 
-$scriptName = $_SERVER['SCRIPT_NAME'] ?? '/';
-$baseUrl = dirname($scriptName);
-if (basename($baseUrl) === 'auth') {
-    $baseUrl = dirname($baseUrl);
+$errors = [];
+$basePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
+if (basename($basePath) === 'auth') {
+    $basePath = dirname($basePath);
 }
-$baseUrl = rtrim($baseUrl, '/');
+$basePath = $basePath === '/' ? '' : $basePath;
+$loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
 
-$error = "";
+if ($loggedIn) {
+    header('Location: ' . ($basePath ? $basePath : '.') . '/index.php');
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $fullName = trim($_POST['fullname']);
-    $email = trim($_POST['email']);
-    $contact = trim($_POST['contact']);
-    $password = $_POST['password'];
-    $confirmPassword = $_POST['confirm_password'];
+    $fullname = trim($_POST['fullname'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $contact = trim($_POST['contact'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirmPassword = $_POST['confirm_password'] ?? '';
 
-    if ($password !== $confirmPassword) {
-        $error = "Passwords do not match.";
+    if ($fullname === '' || $email === '' || $password === '' || $confirmPassword === '') {
+        $errors[] = 'Please fill in all required fields.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Please enter a valid email address.';
+    } elseif ($password !== $confirmPassword) {
+        $errors[] = 'Passwords do not match.';
+    } elseif (strlen($password) < 8) {
+        $errors[] = 'Password must be at least 8 characters.';
     } else {
-        // Check if email is already taken
         $stmt = $conn->prepare("SELECT UserID FROM USER_ACCOUNT WHERE Email = ?");
-        $stmt->bind_param("s", $email);
+        $stmt->bind_param('s', $email);
         $stmt->execute();
         $stmt->store_result();
-
         if ($stmt->num_rows > 0) {
-            $error = "An account with that email already exists.";
-        } else {
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $insert = $conn->prepare("INSERT INTO USER_ACCOUNT (FullName, Email, Password, ContactNumber) VALUES (?, ?, ?, ?)");
-            $insert->bind_param("ssss", $fullName, $email, $hashedPassword, $contact);
-            $insert->execute();
-            $insert->close();
-
-            header("Location: {$baseUrl}/login.php");
-            exit;
+            $errors[] = 'An account with that email already exists.';
         }
         $stmt->close();
+    }
+
+    if (empty($errors)) {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt = $conn->prepare(
+            "INSERT INTO USER_ACCOUNT (FullName, Email, Password, ContactNumber) VALUES (?, ?, ?, ?)"
+        );
+        $stmt->bind_param('ssss', $fullname, $email, $hashedPassword, $contact);
+
+        if ($stmt->execute()) {
+            $userId = (int) $stmt->insert_id;
+            $_SESSION['user_id'] = $userId;
+            $_SESSION['UserID'] = $userId;
+            $_SESSION['user_name'] = $fullname;
+            $_SESSION['FullName'] = $fullname;
+            $stmt->close();
+            header('Location: ' . ($basePath ? $basePath : '.') . '/index.php');
+            exit;
+        } else {
+            $errors[] = 'Could not create account: ' . $stmt->error;
+            $stmt->close();
+        }
     }
 }
 ?>
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register | DOLCI</title>
-    <link rel="stylesheet" href="<?= htmlspecialchars($baseUrl) ?>/css/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOLCI - Register</title>
+    <link rel="stylesheet" href="<?= $basePath ?>/css/style.css">
 </head>
+
 <body>
-<nav>
-    <a href="<?= htmlspecialchars($baseUrl) ?>/index.php" class="logo" style="font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--pink-bubble); padding: 0; letter-spacing: 0.02em;">DOLCI</a>
-    <div class="nav-links">
-        <a href="<?= htmlspecialchars($baseUrl) ?>/index.php">Home</a>
-        <a href="<?= htmlspecialchars($baseUrl) ?>/menu.php">Menu</a>
-        <a href="<?= htmlspecialchars($baseUrl) ?>/order.php">Order</a>
-        <a href="<?= htmlspecialchars($baseUrl) ?>/cart.php">Cart</a>
-        <a href="<?= htmlspecialchars($baseUrl) ?>/about.php">About</a>
-        <a href="<?= htmlspecialchars($baseUrl) ?>/contact.php">Contact</a>
-        <a href="<?= htmlspecialchars($baseUrl) ?>/login.php" class="login-link">Login</a>
-    </div>
-</nav>
 
-<svg class="icing-drip" viewBox="0 0 1440 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path fill="var(--white)" d="M0,0 H1440 V10
-      C1380,10 1380,34 1320,34
-      C1260,34 1260,10 1200,10
-      C1140,10 1140,34 1080,34
-      C1020,34 1020,10 960,10
-      C900,10 900,34 840,34
-      C780,34 780,10 720,10
-      C660,10 660,34 600,34
-      C540,34 540,10 480,10
-      C420,10 420,34 360,34
-      C300,34 300,10 240,10
-      C180,10 180,34 120,34
-      C60,34 60,10 0,10 Z" />
-</svg>
+    <nav>
+        <a href="<?= $basePath ?>/index.php" class="logo">DOLCI</a>
+        <div class="nav-links">
+            <a href="<?= $basePath ?>/index.php">Home</a>
+            <a href="<?= $basePath ?>/menu.php">Menu</a>
+            <a href="<?= $basePath ?>/about.php">About</a>
+            <a href="<?= $basePath ?>/contact.php">Contact</a>
+            <?= $loggedIn
+                ? '<a href="' . $basePath . '/dashboard.php" class="login-link">Profile</a>'
+                : '<a href="' . $basePath . '/login.php" class="login-link">Login</a>' ?>
+        </div>
+    </nav>
 
-<main class="page-container">
-    <h1 class="page-title">Create Your Account</h1>
-    <p class="page-subtitle">Join DOLCI to start ordering your dream cakes.</p>
+    <main class="page-container">
+        <h1 class="page-title">Create Your Account</h1>
+        <p class="page-subtitle">Sign up to start ordering your favorite cakes and treats.</p>
 
-    <div class="card" style="max-width: 500px; margin: auto">
-        <?php if ($error): ?>
-            <p style="color: var(--pink-deep); font-weight: 600;"><?= htmlspecialchars($error) ?></p>
-        <?php endif; ?>
+        <div class="card" style="max-width: 500px; margin: auto">
 
-        <form method="POST" action="<?= htmlspecialchars($baseUrl) ?>/register.php">
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" name="fullname" required>
-            </div>
+            <?php if (!empty($errors)): ?>
+                <div class="form-error">
+                    <?= htmlspecialchars(implode(' ', $errors)) ?>
+                </div>
+            <?php endif; ?>
 
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" required>
-            </div>
+            <form method="POST">
 
-            <div class="form-group">
-                <label>Contact Number</label>
-                <input type="text" name="contact" required>
-            </div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="fullname" required value="<?= htmlspecialchars($_POST['fullname'] ?? '') ?>">
+                </div>
 
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
-            </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+                </div>
 
-            <div class="form-group">
-                <label>Confirm Password</label>
-                <input type="password" name="confirm_password" required>
-            </div>
+                <div class="form-group">
+                    <label>Contact Number</label>
+                    <input type="text" name="contact" value="<?= htmlspecialchars($_POST['contact'] ?? '') ?>">
+                </div>
 
-            <button class="btn btn-primary" style="width: 100%" type="submit">Register</button>
-        </form>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
 
-        <p style="text-align:center; margin-top:16px;">
-            Already have an account? <a href="<?= htmlspecialchars($baseUrl) ?>/login.php">Login here</a>
-        </p>
-    </div>
-</main>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirm_password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%">Register</button>
+
+            </form>
+
+            <p style="text-align: center; margin-top: 24px; margin-bottom: 0; color: var(--cocoa-soft);">
+                Already have an account?
+                <a href="<?= $basePath ?>/login.php" style="color: var(--pink-bubble); font-weight: 700; text-decoration: none;">Login</a>
+            </p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 DOLCI</p>
+    </footer>
+
 </body>
 </html>

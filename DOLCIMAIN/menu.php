@@ -1,3 +1,38 @@
+<?php
+session_start();
+require_once __DIR__ . '/auth/database.php'; // expects $conn (mysqli)
+$editItem = null;
+$loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
+
+if (isset($_GET['edit']) && (!empty($_SESSION['user_id']) || !empty($_SESSION['UserID']))) {
+    $cartId = (int) $_GET['edit'];
+    $userId = (int) ($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);
+
+    $stmt = $conn->prepare("SELECT * FROM CART WHERE CartID = ? AND UserID = ?");
+    $stmt->bind_param('ii', $cartId, $userId);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($row) {
+        $decodedIcing = json_decode($row['Icing'], true);
+        $decodedFilling = json_decode($row['Filling'], true);
+        $isPerLayer = json_last_error() === JSON_ERROR_NONE && is_array($decodedIcing);
+
+        $editItem = [
+            'id' => (int) $row['CartID'],
+            'cakeId' => (int) $row['CakeID'],
+            'flavor' => $row['Flavor'],
+            'base_price' => null, // resolved client-side from the matching flavor card
+            'tiers' => (int) $row['Layers'],
+            'icing' => $isPerLayer ? $decodedIcing : $row['Icing'],
+            'filling' => $isPerLayer ? $decodedFilling : $row['Filling'],
+            'decorations' => $row['Decorations'] ? array_map('trim', explode(',', $row['Decorations'])) : [],
+            'dedication' => $row['CakeText'],
+        ];
+    }
+}
+?>
 <!doctype html>
 <html lang="en">
   <head>
@@ -32,7 +67,12 @@
         <a href="cart.php">Cart</a>
         <a href="about.php">About</a>
         <a href="contact.php">Contact</a>
-        <a href="login.php" class="login-link">Login</a>
+        <?php if ($loggedIn): ?>
+          <a href="dashboard.php" class="login-link">Profile</a>
+          <a href="logout.php" class="login-link">Logout</a>
+        <?php else: ?>
+          <a href="login.php" class="login-link">Login</a>
+        <?php endif; ?>
       </div>
     </nav>
 
@@ -256,6 +296,10 @@
           <span class="amount" id="summaryTierPrice">+₱0</span>
         </div>
         <div class="price-line">
+          <span>Icing &amp; Filling</span>
+          <span class="amount" id="summaryCustomizationPrice">+₱0</span>
+        </div>
+        <div class="price-line">
           <span>Decorations</span>
           <span class="amount" id="summaryDecorPrice">+₱0</span>
         </div>
@@ -269,7 +313,7 @@
 
       <div style="text-align: center">
         <button id="addToCartBtn" type="button" class="btn btn-primary">
-          Add to Cart
+          <?= $editItem ? 'Update Cake' : 'Add to Cart' ?>
         </button>
       </div>
     </main>
@@ -277,240 +321,13 @@
     <footer>
       <p>&copy; 2026 DOLCI</p>
     </footer>
+
+    <script>
+      // If the user arrived via cart.php's "Edit" link, this holds that
+      // cart item's saved configuration so menu.js can pre-fill the form.
+      const editItem = <?= $editItem ? json_encode($editItem) : 'null' ?>;
+    </script>
     <script src="js/loader.js"></script>
     <script src="js/menu.js"></script>
-    <script>
-      const TIER_PRICE = 300;
-      const MAX_TIERS = 4;
-
-      const flavorCards = document.querySelectorAll(".flavor-card");
-      const tierMinus = document.getElementById("tierMinus");
-      const tierPlus = document.getElementById("tierPlus");
-      const tierCountEl = document.getElementById("tierCount");
-      const tierPriceTag = document.getElementById("tierPriceTag");
-      const modeToggle = document.getElementById("modeToggle");
-      const uniformLayer = document.getElementById("uniformLayer");
-      const perLayerContainer = document.getElementById("perLayerContainer");
-      const decorationCheckboxes = document.querySelectorAll(
-        "#decorationsGrid input[type='checkbox']",
-      );
-
-      const summaryFlavorLabel = document.getElementById("summaryFlavorLabel");
-      const summaryFlavorPrice = document.getElementById("summaryFlavorPrice");
-      const summaryTierLabel = document.getElementById("summaryTierLabel");
-      const summaryTierPrice = document.getElementById("summaryTierPrice");
-      const summaryDecorPrice = document.getElementById("summaryDecorPrice");
-      const summaryTotalPrice = document.getElementById("summaryTotalPrice");
-
-      const icingOptions = [
-        "Buttercream",
-        "Whipped Cream",
-        "Chocolate Ganache",
-        "Cream Cheese Frosting",
-        "Fondant",
-      ];
-      const fillingOptions = [
-        "Chocolate Mousse",
-        "Fresh Strawberries",
-        "Vanilla Cream",
-        "Cookies & Cream",
-        "Salted Caramel",
-        "Blueberry Jam",
-        "No Filling",
-      ];
-
-      let state = {
-        flavorName: "Vanilla",
-        flavorPrice: 500,
-        tiers: 1,
-        mode: "uniform",
-      };
-
-      function buildSelect(options) {
-        return options.map((o) => `<option>${o}</option>`).join("");
-      }
-
-      function renderPerLayerRows() {
-        perLayerContainer.innerHTML = "";
-        for (let i = 1; i <= state.tiers; i++) {
-          const row = document.createElement("div");
-          row.className = "layer-row";
-          row.innerHTML = `
-            <span class="layer-label">Tier ${i}</span>
-            <div class="form-group">
-              <label>Icing</label>
-              <select>${buildSelect(icingOptions)}</select>
-            </div>
-            <div class="form-group">
-              <label>Filling</label>
-              <select>${buildSelect(fillingOptions)}</select>
-            </div>
-          `;
-          perLayerContainer.appendChild(row);
-        }
-      }
-
-      function updateModeVisibility() {
-        if (state.mode === "uniform") {
-          uniformLayer.style.display = "grid";
-          perLayerContainer.style.display = "none";
-        } else {
-          uniformLayer.style.display = "none";
-          perLayerContainer.style.display = "block";
-          renderPerLayerRows();
-        }
-      }
-
-      function updateSummary() {
-        const decorTotal = Array.from(decorationCheckboxes)
-          .filter((c) => c.checked)
-          .reduce((sum, c) => sum + Number(c.dataset.price), 0);
-
-        const tierAddOn = (state.tiers - 1) * TIER_PRICE;
-        const total = state.flavorPrice + tierAddOn + decorTotal;
-
-        summaryFlavorLabel.textContent = `${state.flavorName} base`;
-        summaryFlavorPrice.textContent = `₱${state.flavorPrice}`;
-        summaryTierLabel.textContent = `${state.tiers} tier${state.tiers > 1 ? "s" : ""}`;
-        summaryTierPrice.textContent = `+₱${tierAddOn}`;
-        summaryDecorPrice.textContent = `+₱${decorTotal}`;
-        summaryTotalPrice.textContent = `₱${total}`;
-        tierPriceTag.textContent = `+₱${tierAddOn}`;
-      }
-
-      // Flavor selection
-      flavorCards.forEach((card) => {
-        card.addEventListener("click", () => {
-          flavorCards.forEach((c) => c.classList.remove("selected"));
-          card.classList.add("selected");
-          state.flavorName = card.querySelector("h3").textContent.trim();
-          state.flavorPrice = Number(card.dataset.price);
-          updateSummary();
-        });
-      });
-      flavorCards[0].classList.add("selected");
-
-      // Tier stepper
-      function setTiers(n) {
-        state.tiers = Math.min(MAX_TIERS, Math.max(1, n));
-        tierCountEl.textContent = state.tiers;
-        tierMinus.disabled = state.tiers <= 1;
-        tierPlus.disabled = state.tiers >= MAX_TIERS;
-        if (state.mode === "perlayer") renderPerLayerRows();
-        updateSummary();
-      }
-      tierMinus.addEventListener("click", () => setTiers(state.tiers - 1));
-      tierPlus.addEventListener("click", () => setTiers(state.tiers + 1));
-
-      // Mode toggle
-      modeToggle.querySelectorAll("button").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          modeToggle
-            .querySelectorAll("button")
-            .forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          state.mode = btn.dataset.mode;
-          updateModeVisibility();
-        });
-      });
-
-      // Decorations
-      decorationCheckboxes.forEach((c) =>
-        c.addEventListener("change", updateSummary),
-      );
-
-      // Init
-      setTiers(1);
-      updateModeVisibility();
-      updateSummary();
-
-      document
-        .getElementById("addToCartBtn")
-        .addEventListener("click", addToCart);
-
-      async function addToCart() {
-        const decorations = [];
-
-        decorationCheckboxes.forEach((box) => {
-          if (box.checked) {
-            decorations.push(
-              box.parentElement.innerText.replace(/\+\₱.*/, "").trim(),
-            );
-          }
-        });
-
-        let icing;
-        let filling;
-
-        if (state.mode === "uniform") {
-          icing = document.getElementById("uniformIcing").value;
-
-          filling = document.getElementById("uniformFilling").value;
-        } else {
-          icing = [];
-          filling = [];
-
-          document
-            .querySelectorAll("#perLayerContainer .layer-row")
-            .forEach((row, index) => {
-              const selects = row.querySelectorAll("select");
-
-              icing.push({
-                tier: index + 1,
-                value: selects[0].value,
-              });
-
-              filling.push({
-                tier: index + 1,
-                value: selects[1].value,
-              });
-            });
-        }
-
-        const cake = {
-          flavor: state.flavorName,
-
-          base_price: state.flavorPrice,
-
-          tiers: state.tiers,
-
-          icing: icing,
-
-          filling: filling,
-
-          decorations: decorations,
-
-          dedication: document.getElementById("dedicationMessage").value,
-
-          total: Number(summaryTotalPrice.textContent.replace(/[₱,]/g, "")),
-        };
-
-        try {
-          const response = await fetch("backend/add_to_cart.php", {
-            method: "POST",
-
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify(cake),
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            alert("🍰 Cake added to cart!");
-
-            window.location = "cart.php";
-          } else {
-            alert(result.message);
-          }
-        } catch (error) {
-          console.error(error);
-
-          alert("Unable to add cake to cart.");
-        }
-      }
-    </script>
   </body>
 </html>

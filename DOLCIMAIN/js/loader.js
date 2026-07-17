@@ -1,13 +1,22 @@
-console.log("loader.js loaded");
-
-window.addEventListener("load", () => {
-  console.log("Window loaded");
-
+function hideLoader() {
   const loader = document.getElementById("loader");
-
-  setTimeout(() => {
-    console.log("Hiding loader");
-
+  if (loader) {
     loader.classList.add("hidden");
-  }, 800);
-});
+  }
+}
+
+if (
+  document.readyState === "complete" ||
+  document.readyState === "interactive"
+) {
+  window.setTimeout(hideLoader, 200);
+} else {
+  window.addEventListener("load", hideLoader, { once: true });
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+      window.setTimeout(hideLoader, 200);
+    },
+    { once: true },
+  );
+}

@@ -1,3 +1,7 @@
+<?php
+session_start();
+$loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
+?>
 <!doctype html>
 <html lang="en">
   <head>
@@ -35,7 +39,12 @@
         <a href="cart.php">Cart</a>
         <a href="about.php">About</a>
         <a href="contact.php" class="active">Contact</a>
-        <a href="login.php" class="login-link">Login</a>
+        <?php if ($loggedIn): ?>
+          <a href="dashboard.php" class="login-link">Profile</a>
+          <a href="logout.php" class="login-link">Logout</a>
+        <?php else: ?>
+          <a href="login.php" class="login-link">Login</a>
+        <?php endif; ?>
       </div>
     </nav>
 
