@@ -138,14 +138,14 @@ if (isset($_GET['edit']) && (!empty($_SESSION['user_id']) || !empty($_SESSION['U
             <p class="price">₱550 base</p>
           </div>
 
-          <div class="flavor-card" data-cakeid="3" data-flavor="strawberry" data-price="600">
+          <div class="flavor-card" data-cakeid="3" data-flavor="strawberry" data-price="550">
             <div class="flavor-cake flavor-strawberry">
               <div class="flavor-cherry"></div>
               <div class="flavor-cake-drip"></div>
               <div class="flavor-cake-body"></div>
             </div>
             <h3>Strawberry</h3>
-            <p class="price">₱600 base</p>
+            <p class="price">₱550 base</p>
           </div>
 
           <div class="flavor-card" data-cakeid="4" data-flavor="redvelvet" data-price="650">

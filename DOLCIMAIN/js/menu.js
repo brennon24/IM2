@@ -71,6 +71,7 @@ let state = {
   sizePrice: 0,
   tiers: 1,
   mode: "uniform",
+  waivedDecorationEl: null,
 };
 
 function buildSelect(options, selectedValue) {
@@ -210,7 +211,10 @@ function renderVisualization() {
 
 function updateSummary() {
   const decorTotal = decorationCheckboxes
-    .filter((checkbox) => checkbox.checked)
+    .filter(
+      (checkbox) =>
+        checkbox.checked && checkbox !== state.waivedDecorationEl
+    )
     .reduce((sum, checkbox) => sum + Number(checkbox.dataset.price || 0), 0);
   const tierAddOn = (state.tiers - 1) * TIER_PRICE;
   const customizationCost = 0;
@@ -402,16 +406,49 @@ function init() {
   if (typeof editItem !== "undefined" && editItem) {
     applyEditItem(editItem);
   } else {
+    const params = new URLSearchParams(window.location.search);
+    const requestedFlavor = params.get("flavor");
+    const matchedCard = requestedFlavor
+      ? flavorCards.find(
+          (card) =>
+            card.dataset.flavor &&
+            card.dataset.flavor.toLowerCase() === requestedFlavor.toLowerCase()
+        )
+      : null;
+    const startingCard = matchedCard || flavorCards[0];
+
     flavorCards.forEach((card) => card.classList.remove("selected"));
-    flavorCards[0]?.classList.add("selected");
-    flavorCards[0]?.setAttribute("aria-pressed", "true");
+    startingCard?.classList.add("selected");
+    startingCard?.setAttribute("aria-pressed", "true");
     state.flavorName =
-      flavorCards[0]?.querySelector("h3")?.textContent?.trim() || "Vanilla";
-    state.flavorPrice = Number(flavorCards[0]?.dataset.price || 500);
-    state.cakeId = Number(flavorCards[0]?.dataset.cakeid || 0);
-    state.flavorId = flavorCards[0]?.dataset.flavor
-      ? flavorCards[0].dataset.flavor.toLowerCase().replace(/\s+/g, "")
+      startingCard?.querySelector("h3")?.textContent?.trim() || "Vanilla";
+    state.flavorPrice = Number(startingCard?.dataset.price || 500);
+    state.cakeId = Number(startingCard?.dataset.cakeid || 0);
+    state.flavorId = startingCard?.dataset.flavor
+      ? startingCard.dataset.flavor.toLowerCase().replace(/\s+/g, "")
       : "vanilla";
+
+    // Scroll the chosen flavor into view when arriving from a direct link
+    if (matchedCard) {
+      matchedCard.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // Cake of the Day preset: match the homepage description
+      // ("whipped cream... topped with seasonal berries")
+      if (requestedFlavor.toLowerCase() === "strawberry") {
+        const uniformIcing = document.getElementById("uniformIcing");
+        if (uniformIcing) uniformIcing.value = "Whipped Cream";
+
+        const freshFruitsCheckbox = Array.from(
+          document.querySelectorAll("#decorationsGrid input[type='checkbox']")
+        ).find((box) =>
+          box.parentElement?.textContent?.includes("Fresh Fruits")
+        );
+        if (freshFruitsCheckbox) {
+          freshFruitsCheckbox.checked = true;
+          state.waivedDecorationEl = freshFruitsCheckbox;
+        }
+      }
+    }
 
     // Default size card is already marked class="selected" in the HTML (8")
     const defaultSizeCard =
