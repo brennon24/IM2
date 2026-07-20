@@ -30,6 +30,7 @@ if (!isset($_SESSION['UserID'])) {
         <a href="menu.php">Menu</a>
         <!-- Notice the "Orders" link is missing here -->
         <a href="cart.php">Cart</a>
+        <a href="reviews.php">Reviews</a>
         <a href="about.php">About</a>
         <a href="contact.php">Contact</a>
         <a href="dashboard.php" class="login-link">Profile</a>
@@ -105,7 +106,16 @@ if (!isset($_SESSION['UserID'])) {
                         <td style="padding:8px;"><?= (int) $item['Quantity'] ?></td>
                         <td style="padding:8px;"><?= (int) $item['Layers'] ?></td>
                         <td style="padding:8px;"><?= htmlspecialchars($item['CakeText'] ?? '—') ?></td>
-                        <td style="padding:8px; text-align:right; color: var(--gold-deep); font-weight: 800;">₱<?= number_format((float) $item['TotalPrice'], 2) ?></td>
+                        <td style="padding:8px; text-align:right; color: var(--gold-deep); font-weight: 800;">
+                            ₱<?= number_format((float) $item['TotalPrice'], 2) ?>
+                            <?php if (strtolower($o['OrderStatus']) === 'completed'): ?>
+                                <br>
+                                <a href="reviews.php?cake_id=<?= (int) $item['CakeID'] ?>#leave-review"
+                                   style="font-size:0.8rem; font-weight:700; color: var(--pink-bubble);">
+                                    Leave a Review
+                                </a>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                     <tr>
