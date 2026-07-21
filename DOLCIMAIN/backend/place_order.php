@@ -47,6 +47,8 @@ try {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
 
+    $orderGrandTotal = 0;
+
     foreach ($cartItems as $item) {
         $stmtItem->bind_param(
             'iisissssid',
@@ -62,10 +64,21 @@ try {
             $item['TotalPrice']
         );
         $stmtItem->execute();
+        $orderGrandTotal += (float) $item['TotalPrice'];
     }
     $stmtItem->close();
 
-    // 3. Clear the user's cart
+    // 3. Create the matching Payment record — every order gets exactly one,
+    //    starting as 'Unpaid' since Cash on Delivery hasn't been collected yet.
+    $paymentStatus = 'Unpaid';
+    $stmtPayment = $conn->prepare(
+        "INSERT INTO PAYMENT (OrderID, PaymentMethod, PaymentStatus) VALUES (?, ?, ?)"
+    );
+    $stmtPayment->bind_param('iss', $orderId, $paymentMethod, $paymentStatus);
+    $stmtPayment->execute();
+    $stmtPayment->close();
+
+    // 4. Clear the user's cart
     $stmtClear = $conn->prepare("DELETE FROM CART WHERE UserID = ?");
     $stmtClear->bind_param('i', $userId);
     $stmtClear->execute();
