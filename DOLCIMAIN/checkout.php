@@ -105,10 +105,24 @@ function decodeMaybeJson($value) {
             <div class="card checkout-summary">
               <h2 class="section-title">Payment Method</h2>
               
-              <div class="payment-option selected">
-                <input type="radio" id="cod" name="payment" checked disabled>
+              <div class="payment-option selected" data-method="Cash on Delivery">
+                <input type="radio" id="cod" name="payment" value="Cash on Delivery" checked>
                 <label for="cod">💵 Cash on Delivery</label>
                 <p class="payment-desc">Pay with cash when your order is delivered.</p>
+              </div>
+
+              <div class="payment-option" data-method="QR">
+                <input type="radio" id="qr" name="payment" value="QR">
+                <label for="qr">📱 QR Payment</label>
+                <p class="payment-desc">Scan the QR code, upload proof, and wait for confirmation.</p>
+              </div>
+
+              <div id="qrSection" style="display:none; margin-top: 16px; border: 2px dashed var(--pink-soft); border-radius: 16px; padding: 16px; background: #fffdf8;">
+                <p style="margin:0 0 10px; font-weight:700; color: var(--pink-bubble);">Scan this QR to pay</p>
+                <div style="display:flex; justify-content:center; align-items:center; min-height: 180px; border-radius: 12px; background: #fff; border: 1px solid var(--pink-soft);">
+                  <img src="images/qr_placeholder.jpg" alt="QR code placeholder" style="max-width: 180px; width:100%; height:auto;">
+                </div>
+                <p style="margin:10px 0 0; font-size:0.85rem; color: var(--cocoa-soft);">Once done with payment, contact DOLCI and send your Order ID and reference number for confirmation.</p>
               </div>
 
               <div class="price-summary" style="margin-top: 20px; border-top: 2px solid var(--pink-soft); padding-top: 20px;">
@@ -121,6 +135,10 @@ function decodeMaybeJson($value) {
               <button id="place-order-btn" class="btn btn-primary" style="width: 100%; margin-top: 24px;">
                 Place Order
               </button>
+              <div id="qrConfirmation" style="display:none; margin-top: 16px; padding: 16px; border-radius: 16px; background: #fff7fb; border: 1px solid var(--pink-soft); text-align:center;">
+                <p style="margin:0 0 10px; font-weight:700; color: var(--pink-bubble);">Kindly wait for payment confirmation by the admin.</p>
+                <a href="order_history.php" class="btn btn-secondary" style="width:100%; margin-top: 8px; text-align:center;">Exit to Orders</a>
+              </div>
               <a href="cart.php" class="btn btn-secondary" style="width: 100%; margin-top: 12px; text-align:center;">
                 Back to Cart
               </a>
@@ -141,22 +159,42 @@ function decodeMaybeJson($value) {
         if (loader) loader.classList.add("hidden");
       }, 1500);
 
-      // Handle Place Order button click
+      const paymentOptions = Array.from(document.querySelectorAll('.payment-option'));
+      const qrSection = document.getElementById('qrSection');
+      const qrConfirmation = document.getElementById('qrConfirmation');
+
+      paymentOptions.forEach((option) => {
+        option.addEventListener('click', () => {
+          const radio = option.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+          paymentOptions.forEach((item) => item.classList.remove('selected'));
+          option.classList.add('selected');
+          qrSection.style.display = option.dataset.method === 'QR' ? 'block' : 'none';
+        });
+      });
+
       document.getElementById("place-order-btn")?.addEventListener("click", async () => {
         const btn = document.getElementById("place-order-btn");
+        const selectedMethod = document.querySelector('input[name="payment"]:checked')?.value || 'Cash on Delivery';
         btn.textContent = "Placing Order...";
         btn.disabled = true;
 
         try {
           const res = await fetch("backend/place_order.php", {
             method: "POST",
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentMethod: selectedMethod })
           });
           const result = await res.json();
           
           if (result.success) {
-            alert("Order placed successfully! Your order number is #" + (result.orderCode || result.orderId));
-            window.location.href = "dashboard.php"; 
+            if (selectedMethod === 'QR') {
+              btn.style.display = 'none';
+              qrConfirmation.style.display = 'block';
+            } else {
+              alert("Order placed successfully! Your order number is #" + (result.orderCode || result.orderId));
+              window.location.href = "order_history.php";
+            }
           } else {
             alert(result.message || "Failed to place order.");
             btn.textContent = "Place Order";

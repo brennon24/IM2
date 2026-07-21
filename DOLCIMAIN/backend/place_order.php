@@ -27,8 +27,11 @@ if (empty($cartItems)) {
 $conn->begin_transaction();
 
 try {
-    $paymentMethod = 'Cash on Delivery';
-    $customNote = 'Order placed via Cash on Delivery';
+    $input = json_decode(file_get_contents('php://input'), true);
+    $paymentMethod = isset($input['paymentMethod']) && $input['paymentMethod'] === 'QR' ? 'QR' : 'Cash on Delivery';
+    $customNote = $paymentMethod === 'QR'
+        ? 'Order placed via QR Payment'
+        : 'Order placed via Cash on Delivery';
     $orderCode = generateUniqueOrderCode($conn);
     $stmtOrder = $conn->prepare(
         "INSERT INTO `ORDER` (CustomerID, CustomNote, OrderStatus, PaymentMethod, OrderCode) VALUES (?, ?, 'Pending', ?, ?)"
