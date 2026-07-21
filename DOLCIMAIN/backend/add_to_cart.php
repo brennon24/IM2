@@ -25,8 +25,6 @@ $flavor = $data['flavor'];
 $size = $data['size'] ?? '8 inch';
 $layers = (int) ($data['tiers'] ?? 1);
 
-// Per-layer mode sends an array (one entry per tier) — store as JSON.
-// Uniform mode sends a single string — store as-is.
 $icing = is_array($data['icing'] ?? null) ? json_encode($data['icing']) : ($data['icing'] ?? '');
 $filling = is_array($data['filling'] ?? null) ? json_encode($data['filling']) : ($data['filling'] ?? '');
 

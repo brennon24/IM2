@@ -139,8 +139,6 @@ function updateModeVisibility(prefillIcing, prefillFilling) {
   }
 }
 
-// ---------- Visualization ----------
-
 function renderVisualization() {
   if (!visualCakeStack || !visualPlate || !visualRuler || !visualReadout)
     return;
@@ -149,10 +147,7 @@ function renderVisualization() {
   const tierHeightPx = TIER_HEIGHT_IN * PX_PER_INCH;
   const plateWidthPx = PLATE_DIAMETER_IN * PX_PER_INCH;
 
-  // Plate (fixed reference size)
   visualPlate.style.width = plateWidthPx + "px";
-
-  // Build cake tiers, bottom (widest) to top (narrowest)
   visualCakeStack.innerHTML = "";
   const totalHeightPx = tierHeightPx * state.tiers;
   visualCakeStack.style.height = totalHeightPx + "px";
@@ -176,11 +171,8 @@ function renderVisualization() {
 
     tierWrap.appendChild(drip);
     tierWrap.appendChild(body);
-    // Insert so the bottom tier ends up at the bottom of the stack visually
     visualCakeStack.insertBefore(tierWrap, visualCakeStack.firstChild);
   }
-
-  // Ruler — ticks every inch from 0 to 14, labeled every 2
   const rulerMaxInches = 14;
   visualRuler.innerHTML = "";
   visualRuler.style.width = rulerMaxInches * PX_PER_INCH + "px";
@@ -197,7 +189,6 @@ function renderVisualization() {
     visualRuler.appendChild(tick);
   }
 
-  // Readout text
   const totalHeightIn = (TIER_HEIGHT_IN * state.tiers).toFixed(1);
   const diff = state.sizeDiameter - PLATE_DIAMETER_IN;
   let compareText;

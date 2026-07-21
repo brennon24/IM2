@@ -9,8 +9,7 @@ if (!$userId) {
     exit;
 }
 
-// Fetch current cart items
- $stmt = $conn->prepare("SELECT * FROM CART WHERE UserID = ?");
+$stmt = $conn->prepare("SELECT * FROM CART WHERE UserID = ?");
  $stmt->bind_param('i', $userId);
  $stmt->execute();
  $result = $stmt->get_result();
@@ -25,11 +24,9 @@ if (empty($cartItems)) {
     exit;
 }
 
-// Start Database Transaction (Ensures all queries succeed or none do)
- $conn->begin_transaction();
+$conn->begin_transaction();
 
 try {
-    // 1. Create the Official Order Record
     $paymentMethod = 'Cash on Delivery';
     $customNote = 'Order placed via Cash on Delivery';
     $orderCode = generateUniqueOrderCode($conn);
@@ -41,7 +38,6 @@ try {
     $orderId = $stmtOrder->insert_id;
     $stmtOrder->close();
 
-    // 2. Move Cart Items to ORDER_ITEM table permanently
     $stmtItem = $conn->prepare(
         "INSERT INTO ORDER_ITEM (OrderID, CakeID, Flavor, Layers, Icing, Filling, Decorations, CakeText, Quantity, TotalPrice)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -68,8 +64,6 @@ try {
     }
     $stmtItem->close();
 
-    // 3. Create the matching Payment record — every order gets exactly one,
-    //    starting as 'Unpaid' since Cash on Delivery hasn't been collected yet.
     $paymentStatus = 'Unpaid';
     $stmtPayment = $conn->prepare(
         "INSERT INTO PAYMENT (OrderID, PaymentMethod, PaymentStatus) VALUES (?, ?, ?)"
@@ -78,18 +72,15 @@ try {
     $stmtPayment->execute();
     $stmtPayment->close();
 
-    // 4. Clear the user's cart
     $stmtClear = $conn->prepare("DELETE FROM CART WHERE UserID = ?");
     $stmtClear->bind_param('i', $userId);
     $stmtClear->execute();
     $stmtClear->close();
 
-    // Commit all changes to the database
     $conn->commit();
     echo json_encode(['success' => true, 'orderId' => $orderId, 'orderCode' => $orderCode]);
 
 } catch (Exception $e) {
-    // If any error occurs, undo the changes
     $conn->rollback();
     echo json_encode(['success' => false, 'message' => 'Order failed: ' . $e->getMessage()]);
 }
