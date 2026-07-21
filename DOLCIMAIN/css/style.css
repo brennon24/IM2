@@ -527,6 +527,45 @@ textarea {
   font-size: 0.95rem;
 }
 
+.flavor-card .flavor-subtitle {
+  margin: 4px 0 6px;
+  font-size: 0.9rem;
+  color: var(--cocoa-soft);
+}
+
+.flavor-card.unavailable {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: #f8f3f3;
+  border-color: #e8d9d9;
+}
+
+.flavor-card.unavailable:hover {
+  transform: none;
+  border-color: #e8d9d9;
+}
+
+.availability-badge {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff0f3;
+  color: var(--pink-deep);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.flavor-generic .flavor-cake-drip {
+  background: #d1b18a;
+}
+.flavor-generic .flavor-cake-body {
+  background: #efe7de;
+}
+.flavor-generic .flavor-cherry {
+  background: #8d5e3c;
+}
+
 /* Mini animated cake per flavor */
 
 .flavor-cake {

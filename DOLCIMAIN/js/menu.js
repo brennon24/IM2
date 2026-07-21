@@ -14,6 +14,16 @@ const servingEstimates = {
 
 const flavorCards = Array.from(document.querySelectorAll(".flavor-card"));
 const sizeCards = Array.from(document.querySelectorAll(".size-card"));
+
+function updateFlavorAvailabilityState() {
+  flavorCards.forEach((card) => {
+    const isAvailable = card.dataset.available !== "0";
+    card.classList.toggle("unavailable", !isAvailable);
+    card.classList.toggle("disabled", !isAvailable);
+    card.setAttribute("aria-disabled", isAvailable ? "false" : "true");
+    card.style.pointerEvents = isAvailable ? "auto" : "none";
+  });
+}
 const tierMinus = document.getElementById("tierMinus");
 const tierPlus = document.getElementById("tierPlus");
 const tierCountEl = document.getElementById("tierCount");
@@ -212,8 +222,7 @@ function renderVisualization() {
 function updateSummary() {
   const decorTotal = decorationCheckboxes
     .filter(
-      (checkbox) =>
-        checkbox.checked && checkbox !== state.waivedDecorationEl
+      (checkbox) => checkbox.checked && checkbox !== state.waivedDecorationEl,
     )
     .reduce((sum, checkbox) => sum + Number(checkbox.dataset.price || 0), 0);
   const tierAddOn = (state.tiers - 1) * TIER_PRICE;
@@ -254,6 +263,8 @@ function updateSummary() {
 }
 
 function selectFlavorCard(card) {
+  if (!card || card.dataset.available === "0") return;
+
   flavorCards.forEach((item) => {
     item.classList.remove("selected");
     item.setAttribute("aria-pressed", "false");
@@ -402,6 +413,7 @@ function applyEditItem(item) {
 }
 
 function init() {
+  updateFlavorAvailabilityState();
   attachEvents();
   if (typeof editItem !== "undefined" && editItem) {
     applyEditItem(editItem);
@@ -412,10 +424,16 @@ function init() {
       ? flavorCards.find(
           (card) =>
             card.dataset.flavor &&
-            card.dataset.flavor.toLowerCase() === requestedFlavor.toLowerCase()
+            card.dataset.flavor.toLowerCase() === requestedFlavor.toLowerCase(),
         )
       : null;
-    const startingCard = matchedCard || flavorCards[0];
+    const availableCards = flavorCards.filter(
+      (card) => card.dataset.available !== "0",
+    );
+    const startingCard =
+      matchedCard && matchedCard.dataset.available !== "0"
+        ? matchedCard
+        : availableCards[0] || flavorCards[0];
 
     flavorCards.forEach((card) => card.classList.remove("selected"));
     startingCard?.classList.add("selected");
@@ -439,9 +457,9 @@ function init() {
         if (uniformIcing) uniformIcing.value = "Whipped Cream";
 
         const freshFruitsCheckbox = Array.from(
-          document.querySelectorAll("#decorationsGrid input[type='checkbox']")
+          document.querySelectorAll("#decorationsGrid input[type='checkbox']"),
         ).find((box) =>
-          box.parentElement?.textContent?.includes("Fresh Fruits")
+          box.parentElement?.textContent?.includes("Fresh Fruits"),
         );
         if (freshFruitsCheckbox) {
           freshFruitsCheckbox.checked = true;

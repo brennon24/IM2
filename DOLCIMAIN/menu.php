@@ -4,6 +4,27 @@ require_once __DIR__ . '/auth/database.php'; // expects $conn (mysqli)
 $editItem = null;
 $loggedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['UserID']);
 
+function getFlavorCssClass($flavor) {
+    $normalized = strtolower(trim((string) ($flavor ?? '')));
+    $normalized = preg_replace('/[^a-z0-9]+/', '', $normalized);
+
+    $map = [
+        'vanilla' => 'flavor-vanilla',
+        'chocolate' => 'flavor-chocolate',
+        'strawberry' => 'flavor-strawberry',
+        'redvelvet' => 'flavor-redvelvet',
+        'mango' => 'flavor-mango',
+    ];
+
+    return $map[$normalized] ?? 'flavor-generic';
+}
+
+$menuCakes = [];
+$stmt = $conn->prepare("SELECT CakeID, CakeName, Flavor, Price, Availability FROM CAKE_MENU ORDER BY FeaturedCake DESC, CakeName ASC");
+$stmt->execute();
+$menuCakes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
 if (isset($_GET['edit']) && (!empty($_SESSION['user_id']) || !empty($_SESSION['UserID']))) {
     $cartId = (int) $_GET['edit'];
     $userId = (int) ($_SESSION['user_id'] ?? $_SESSION['UserID'] ?? 0);
@@ -119,55 +140,36 @@ if (isset($_GET['edit']) && (!empty($_SESSION['user_id']) || !empty($_SESSION['U
         </div>
 
         <div class="flavor-grid" id="flavorGrid">
-          <div class="flavor-card" data-cakeid="1" data-flavor="vanilla" data-price="500">
-            <div class="flavor-cake flavor-vanilla">
-              <div class="flavor-cherry"></div>
-              <div class="flavor-cake-drip"></div>
-              <div class="flavor-cake-body"></div>
-            </div>
-            <h3>Vanilla</h3>
-            <p class="price">₱500 base</p>
-          </div>
-
-          <div class="flavor-card" data-cakeid="2" data-flavor="Chocolate" data-price="550">
-            <div class="flavor-cake flavor-chocolate">
-              <div class="flavor-cherry"></div>
-              <div class="flavor-cake-drip"></div>
-              <div class="flavor-cake-body"></div>
-            </div>
-            <h3>Chocolate</h3>
-            <p class="price">₱550 base</p>
-          </div>
-
-          <div class="flavor-card" data-cakeid="3" data-flavor="strawberry" data-price="550">
-            <div class="flavor-cake flavor-strawberry">
-              <div class="flavor-cherry"></div>
-              <div class="flavor-cake-drip"></div>
-              <div class="flavor-cake-body"></div>
-            </div>
-            <h3>Strawberry</h3>
-            <p class="price">₱550 base</p>
-          </div>
-
-          <div class="flavor-card" data-cakeid="4" data-flavor="redvelvet" data-price="650">
-            <div class="flavor-cake flavor-redvelvet">
-              <div class="flavor-cherry"></div>
-              <div class="flavor-cake-drip"></div>
-              <div class="flavor-cake-body"></div>
-            </div>
-            <h3>Red Velvet</h3>
-            <p class="price">₱650 base</p>
-          </div>
-
-          <div class="flavor-card" data-cakeid="5" data-flavor="mango" data-price="600">
-            <div class="flavor-cake flavor-mango">
-              <div class="flavor-cherry"></div>
-              <div class="flavor-cake-drip"></div>
-              <div class="flavor-cake-body"></div>
-            </div>
-            <h3>Mango</h3>
-            <p class="price">₱600 base</p>
-          </div>
+          <?php if (empty($menuCakes)): ?>
+            <p class="page-subtitle" style="grid-column: 1 / -1;">No cakes are available right now. Please check back soon.</p>
+          <?php else: ?>
+            <?php foreach ($menuCakes as $cake): ?>
+              <?php $isAvailable = (int) ($cake['Availability'] ?? 1) === 1; ?>
+              <?php $displayName = $cake['CakeName'] ?: ($cake['Flavor'] ?: 'Custom Cake'); ?>
+              <?php $displayFlavor = $cake['Flavor'] ?: 'Custom'; ?>
+              <div class="flavor-card <?= $isAvailable ? '' : 'unavailable' ?>"
+                   data-cakeid="<?= (int) $cake['CakeID'] ?>"
+                   data-flavor="<?= htmlspecialchars(strtolower(str_replace(' ', '', $displayFlavor))) ?>"
+                   data-price="<?= (float) ($cake['Price'] ?? 0) ?>"
+                   data-available="<?= $isAvailable ? '1' : '0' ?>"
+                   tabindex="0"
+                   role="button"
+                   aria-pressed="false"
+                   aria-disabled="<?= $isAvailable ? 'false' : 'true' ?>">
+                <div class="flavor-cake <?= getFlavorCssClass($displayFlavor) ?>">
+                  <div class="flavor-cherry"></div>
+                  <div class="flavor-cake-drip"></div>
+                  <div class="flavor-cake-body"></div>
+                </div>
+                <h3><?= htmlspecialchars($displayName) ?></h3>
+                <p class="flavor-subtitle"><?= htmlspecialchars($displayFlavor) ?></p>
+                <p class="price">₱<?= number_format((float) ($cake['Price'] ?? 0), 2) ?> base</p>
+                <?php if (!$isAvailable): ?>
+                  <div class="availability-badge">Unavailable</div>
+                <?php endif; ?>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </div>
       </section>
 

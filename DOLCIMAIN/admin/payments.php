@@ -44,7 +44,9 @@ $openOrders = $conn->query("SELECT o.OrderID, o.OrderCode, u.FullName FROM `ORDE
 // ---------- If editing ----------
 $editPayment = null;
 if (isset($_GET['edit'])) {
-    $stmt = $conn->prepare("SELECT * FROM PAYMENT WHERE PaymentID=?");
+    $stmt = $conn->prepare("SELECT p.*, o.OrderCode, o.OrderID FROM PAYMENT p
+                            JOIN `ORDER` o ON p.OrderID = o.OrderID
+                            WHERE p.PaymentID=?");
     $stmt->bind_param("i", $_GET['edit']);
     $stmt->execute();
     $editPayment = $stmt->get_result()->fetch_assoc();
@@ -53,15 +55,15 @@ if (isset($_GET['edit'])) {
 
 // ---------- READ + SEARCH ----------
 $search = trim($_GET['search'] ?? '');
-$baseQuery = "SELECT p.*, u.FullName AS CustomerName FROM PAYMENT p
+$baseQuery = "SELECT p.*, o.OrderCode, u.FullName AS CustomerName FROM PAYMENT p
               JOIN `ORDER` o ON p.OrderID = o.OrderID
               JOIN USER_ACCOUNT u ON o.CustomerID = u.UserID";
 if ($search !== "") {
-    $stmt = $conn->prepare($baseQuery . " WHERE u.FullName LIKE ? OR p.PaymentMethod LIKE ? OR p.PaymentStatus LIKE ? OR p.OrderID = ?
+    $stmt = $conn->prepare($baseQuery . " WHERE u.FullName LIKE ? OR p.PaymentMethod LIKE ? OR p.PaymentStatus LIKE ? OR o.OrderCode LIKE ? OR p.OrderID = ?
                             ORDER BY p.PaymentID DESC");
     $like = "%$search%";
     $orderIdSearch = is_numeric($search) ? (int)$search : -1;
-    $stmt->bind_param("sssi", $like, $like, $like, $orderIdSearch);
+    $stmt->bind_param("ssssi", $like, $like, $like, $like, $orderIdSearch);
     $stmt->execute();
     $payments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
@@ -106,7 +108,7 @@ if ($search !== "") {
             <div class="form-group">
                 <label>Order</label>
                 <?php if ($editPayment): ?>
-                    <input type="text" value="Order #<?= $editPayment['OrderID'] ?>" disabled>
+                    <input type="text" value="Order #<?= htmlspecialchars($editPayment['OrderCode'] ?? $editPayment['OrderID']) ?>" disabled>
                     <input type="hidden" name="OrderID" value="<?= $editPayment['OrderID'] ?>">
                 <?php else: ?>
                     <select name="OrderID" required>
