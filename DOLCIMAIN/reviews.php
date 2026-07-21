@@ -14,34 +14,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $message = "Please log in to leave a review.";
         $messageType = "error";
     } else {
-        $cakeId = (int) ($_POST['CakeID'] ?? 0);
+        $reviewType = $_POST['ReviewType'] ?? 'cake';
         $ratingEmoji = trim($_POST['RatingEmoji'] ?? '');
         $reviewText = trim($_POST['ReviewText'] ?? '');
 
-        if (!$cakeId || !$ratingEmoji || !$reviewText) {
-            $message = "Please choose a cake, a rating, and write your review.";
-            $messageType = "error";
-        } else {
-            // Confirm this customer actually has a completed order containing this cake
-            $checkStmt = $conn->prepare("SELECT 1 FROM ORDER_ITEM oi
-                                          JOIN `ORDER` o ON oi.OrderID = o.OrderID
-                                          WHERE o.CustomerID = ? AND o.OrderStatus = 'Completed' AND oi.CakeID = ?
-                                          LIMIT 1");
-            $checkStmt->bind_param("ii", $userId, $cakeId);
-            $checkStmt->execute();
-            $eligible = $checkStmt->get_result()->num_rows > 0;
-            $checkStmt->close();
-
-            if (!$eligible) {
-                $message = "You can only review cakes from your completed orders.";
+        if ($reviewType === 'website') {
+            // General site feedback -- not tied to any specific cake
+            if (!$ratingEmoji || !$reviewText) {
+                $message = "Please choose a rating and write your feedback.";
                 $messageType = "error";
             } else {
-                $stmt = $conn->prepare("INSERT INTO REVIEW (CakeID, UserID, RatingEmoji, ReviewText) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("iiss", $cakeId, $userId, $ratingEmoji, $reviewText);
+                $stmt = $conn->prepare("INSERT INTO REVIEW (CakeID, UserID, RatingEmoji, ReviewText) VALUES (NULL, ?, ?, ?)");
+                $stmt->bind_param("iss", $userId, $ratingEmoji, $reviewText);
                 $stmt->execute();
                 $stmt->close();
-                $message = "Thanks for your review!";
+                $message = "Thanks for your feedback about the site!";
                 $messageType = "success";
+            }
+        } else {
+            $cakeId = (int) ($_POST['CakeID'] ?? 0);
+
+            if (!$cakeId || !$ratingEmoji || !$reviewText) {
+                $message = "Please choose a cake, a rating, and write your review.";
+                $messageType = "error";
+            } else {
+                // Confirm this customer actually has a completed order containing this cake
+                $checkStmt = $conn->prepare("SELECT 1 FROM ORDER_ITEM oi
+                                              JOIN `ORDER` o ON oi.OrderID = o.OrderID
+                                              WHERE o.CustomerID = ? AND o.OrderStatus = 'Completed' AND oi.CakeID = ?
+                                              LIMIT 1");
+                $checkStmt->bind_param("ii", $userId, $cakeId);
+                $checkStmt->execute();
+                $eligible = $checkStmt->get_result()->num_rows > 0;
+                $checkStmt->close();
+
+                if (!$eligible) {
+                    $message = "You can only review cakes from your completed orders.";
+                    $messageType = "error";
+                } else {
+                    $stmt = $conn->prepare("INSERT INTO REVIEW (CakeID, UserID, RatingEmoji, ReviewText) VALUES (?, ?, ?, ?)");
+                    $stmt->bind_param("iiss", $cakeId, $userId, $ratingEmoji, $reviewText);
+                    $stmt->execute();
+                    $stmt->close();
+                    $message = "Thanks for your review!";
+                    $messageType = "success";
+                }
             }
         }
     }
@@ -67,7 +84,7 @@ $preselectedCakeId = (int) ($_GET['cake_id'] ?? 0);
 $search = trim($_GET['search'] ?? '');
 if ($search !== "") {
     $stmt = $conn->prepare("SELECT r.*, c.CakeName, u.FullName FROM REVIEW r
-                            JOIN CAKE_MENU c ON r.CakeID = c.CakeID
+                            LEFT JOIN CAKE_MENU c ON r.CakeID = c.CakeID
                             JOIN USER_ACCOUNT u ON r.UserID = u.UserID
                             WHERE c.CakeName LIKE ? OR u.FullName LIKE ? OR r.ReviewText LIKE ?
                             ORDER BY r.ReviewDate DESC");
@@ -78,7 +95,7 @@ if ($search !== "") {
     $stmt->close();
 } else {
     $reviews = $conn->query("SELECT r.*, c.CakeName, u.FullName FROM REVIEW r
-                              JOIN CAKE_MENU c ON r.CakeID = c.CakeID
+                              LEFT JOIN CAKE_MENU c ON r.CakeID = c.CakeID
                               JOIN USER_ACCOUNT u ON r.UserID = u.UserID
                               ORDER BY r.ReviewDate DESC")->fetch_all(MYSQLI_ASSOC);
 }
@@ -156,25 +173,45 @@ $emojiOptions = ['😍', '😊', '👍', '😐', '😞'];
       <?php if ($loggedIn): ?>
       <div class="card" style="max-width: 700px; margin: 0 auto 40px;" id="leave-review">
         <h2 class="section-title">Leave a Review</h2>
-        <?php if (count($cakes) === 0): ?>
-          <p style="color: var(--cocoa-soft);">
-            You can review a cake once one of your orders is marked <strong>Completed</strong>.
-            Check your <a href="order_history.php" style="color: var(--pink-bubble); font-weight:700;">Order History</a>.
-          </p>
-        <?php else: ?>
-        <form method="POST" action="reviews.php">
+
+        <form method="POST" action="reviews.php" id="reviewForm">
           <input type="hidden" name="action" value="submit_review">
 
           <div class="form-group">
-            <label>Which cake?</label>
-            <select name="CakeID" required>
-              <option value="">-- Select a cake --</option>
-              <?php foreach ($cakes as $cake): ?>
-                <option value="<?= $cake['CakeID'] ?>" <?= $preselectedCakeId === (int)$cake['CakeID'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($cake['CakeName']) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
+            <label>What's this review about?</label>
+            <div style="display:flex; gap:14px; flex-wrap:wrap;">
+              <label style="display:flex; align-items:center; gap:6px; background:var(--cream); border:2px solid var(--pink-soft); border-radius:16px; padding:10px 16px; cursor:pointer; font-weight:700;">
+                <input type="radio" name="ReviewType" value="cake" id="typeCake" checked
+                       style="accent-color: var(--pink-bubble); transform: scale(1.2);"
+                       <?= count($cakes) === 0 ? 'disabled' : '' ?>>
+                A Cake I Ordered
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; background:var(--cream); border:2px solid var(--pink-soft); border-radius:16px; padding:10px 16px; cursor:pointer; font-weight:700;">
+                <input type="radio" name="ReviewType" value="website" id="typeWebsite"
+                       style="accent-color: var(--pink-bubble); transform: scale(1.2);"
+                       <?= count($cakes) === 0 ? 'checked' : '' ?>>
+                The Website Overall
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="cakeSelectGroup" style="<?= count($cakes) === 0 ? 'display:none;' : '' ?>">
+            <?php if (count($cakes) === 0): ?>
+              <p style="color: var(--cocoa-soft); margin:0;">
+                You can review a cake once one of your orders is marked <strong>Completed</strong>.
+                Check your <a href="order_history.php" style="color: var(--pink-bubble); font-weight:700;">Order History</a>.
+              </p>
+            <?php else: ?>
+              <label>Which cake?</label>
+              <select name="CakeID">
+                <option value="">-- Select a cake --</option>
+                <?php foreach ($cakes as $cake): ?>
+                  <option value="<?= $cake['CakeID'] ?>" <?= $preselectedCakeId === (int)$cake['CakeID'] ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($cake['CakeName']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            <?php endif; ?>
           </div>
 
           <div class="form-group">
@@ -196,7 +233,6 @@ $emojiOptions = ['😍', '😊', '👍', '😐', '😞'];
 
           <button type="submit" class="btn btn-primary">Submit Review</button>
         </form>
-        <?php endif; ?>
       </div>
       <?php else: ?>
         <div class="card" style="max-width: 700px; margin: 0 auto 40px; text-align:center;">
@@ -219,7 +255,7 @@ $emojiOptions = ['😍', '😊', '👍', '😐', '😞'];
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
               <div>
                 <strong style="color: var(--pink-bubble); font-family: var(--font-display); font-size:1.1rem;">
-                  <?= htmlspecialchars($r['CakeName']) ?>
+                  <?= $r['CakeName'] ? htmlspecialchars($r['CakeName']) : '🌐 About the Website' ?>
                 </strong>
                 <div style="font-size:0.85rem; color: var(--cocoa-soft);">
                   by <?= htmlspecialchars($r['FullName']) ?> · <?= date('M j, Y', strtotime($r['ReviewDate'])) ?>
@@ -232,6 +268,24 @@ $emojiOptions = ['😍', '😊', '👍', '😐', '😞'];
         <?php endforeach; ?>
       </div>
     </main>
+
+    <script>
+      const typeCake = document.getElementById('typeCake');
+      const typeWebsite = document.getElementById('typeWebsite');
+      const cakeSelectGroup = document.getElementById('cakeSelectGroup');
+
+      function updateReviewTypeUI() {
+        if (!cakeSelectGroup) return;
+        if (typeWebsite && typeWebsite.checked) {
+          cakeSelectGroup.style.display = 'none';
+        } else {
+          cakeSelectGroup.style.display = '';
+        }
+      }
+      typeCake?.addEventListener('change', updateReviewTypeUI);
+      typeWebsite?.addEventListener('change', updateReviewTypeUI);
+      updateReviewTypeUI();
+    </script>
 
     <footer>
       <p>&copy; 2026 DOLCI</p>

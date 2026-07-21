@@ -32,7 +32,7 @@ if (isset($_GET['edit'])) {
 
 $search = trim($_GET['search'] ?? '');
 $baseQuery = "SELECT r.*, c.CakeName, u.FullName FROM REVIEW r
-              JOIN CAKE_MENU c ON r.CakeID = c.CakeID
+              LEFT JOIN CAKE_MENU c ON r.CakeID = c.CakeID
               JOIN USER_ACCOUNT u ON r.UserID = u.UserID";
 if ($search !== "") {
     $stmt = $conn->prepare($baseQuery . " WHERE c.CakeName LIKE ? OR u.FullName LIKE ? OR r.ReviewText LIKE ?
@@ -111,7 +111,7 @@ if ($search !== "") {
             <?php foreach ($reviews as $r): ?>
             <tr>
                 <td><?= $r['ReviewID'] ?></td>
-                <td><?= htmlspecialchars($r['CakeName']) ?></td>
+                <td><?= $r['CakeName'] ? htmlspecialchars($r['CakeName']) : '🌐 Website Feedback' ?></td>
                 <td><?= htmlspecialchars($r['FullName']) ?></td>
                 <td><?= htmlspecialchars($r['RatingEmoji']) ?></td>
                 <td><?= htmlspecialchars($r['ReviewText']) ?></td>

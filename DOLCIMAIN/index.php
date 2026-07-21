@@ -49,6 +49,7 @@ session_start();
         <a href="menu.php">Menu</a>
         <a href="order_history.php">Orders</a>
         <a href="cart.php">Cart</a>
+        <a href="reviews.php">Reviews</a>
         <a href="about.php">About</a>
         <a href="contact.php">Contact</a>
         <?php if ($loggedIn): ?>
