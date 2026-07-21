@@ -32,10 +32,11 @@ try {
     // 1. Create the Official Order Record
     $paymentMethod = 'Cash on Delivery';
     $customNote = 'Order placed via Cash on Delivery';
+    $orderCode = generateUniqueOrderCode($conn);
     $stmtOrder = $conn->prepare(
-        "INSERT INTO `ORDER` (CustomerID, CustomNote, OrderStatus, PaymentMethod) VALUES (?, ?, 'Pending', ?)"
+        "INSERT INTO `ORDER` (CustomerID, CustomNote, OrderStatus, PaymentMethod, OrderCode) VALUES (?, ?, 'Pending', ?, ?)"
     );
-    $stmtOrder->bind_param('iss', $userId, $customNote, $paymentMethod);
+    $stmtOrder->bind_param('isss', $userId, $customNote, $paymentMethod, $orderCode);
     $stmtOrder->execute();
     $orderId = $stmtOrder->insert_id;
     $stmtOrder->close();
@@ -72,7 +73,7 @@ try {
 
     // Commit all changes to the database
     $conn->commit();
-    echo json_encode(['success' => true, 'orderId' => $orderId]);
+    echo json_encode(['success' => true, 'orderId' => $orderId, 'orderCode' => $orderCode]);
 
 } catch (Exception $e) {
     // If any error occurs, undo the changes

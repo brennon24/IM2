@@ -7,8 +7,9 @@ $message = $_GET['msg'] ?? '';
 // ---------- CREATE ----------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create') {
     $adminId = $_POST['AdminID'] !== '' ? (int)$_POST['AdminID'] : null;
-    $stmt = $conn->prepare("INSERT INTO `ORDER` (CustomerID, CustomNote, OrderStatus, AdminID) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("issi", $_POST['CustomerID'], $_POST['CustomNote'], $_POST['OrderStatus'], $adminId);
+    $orderCode = generateUniqueOrderCode($conn);
+    $stmt = $conn->prepare("INSERT INTO `ORDER` (CustomerID, CustomNote, OrderStatus, AdminID, OrderCode) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("issis", $_POST['CustomerID'], $_POST['CustomNote'], $_POST['OrderStatus'], $adminId, $orderCode);
     $stmt->execute();
     $stmt->close();
     $message = "Order created successfully.";
@@ -53,13 +54,16 @@ if (isset($_GET['edit'])) {
 // (with full customization: flavor, layers, icing, filling, decorations).
 $viewItems = null;
 $viewOrderId = $_GET['view'] ?? null;
+$viewOrderCode = null;
 if ($viewOrderId) {
-    $stmt = $conn->prepare("SELECT oi.*, cm.CakeName FROM ORDER_ITEM oi
+    $stmt = $conn->prepare("SELECT o.OrderCode, oi.*, cm.CakeName FROM ORDER_ITEM oi
+                            JOIN `ORDER` o ON oi.OrderID = o.OrderID
                             JOIN CAKE_MENU cm ON oi.CakeID = cm.CakeID
                             WHERE oi.OrderID = ?");
     $stmt->bind_param("i", $viewOrderId);
     $stmt->execute();
     $viewItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $viewOrderCode = $viewItems[0]['OrderCode'] ?? null;
     $stmt->close();
 }
 
@@ -70,11 +74,11 @@ $baseQuery = "SELECT o.*, u.FullName AS CustomerName, a.AdminName
               JOIN USER_ACCOUNT u ON o.CustomerID = u.UserID
               LEFT JOIN ADMIN a ON o.AdminID = a.AdminID";
 if ($search !== "") {
-    $stmt = $conn->prepare($baseQuery . " WHERE u.FullName LIKE ? OR o.OrderStatus LIKE ? OR o.OrderID = ?
+    $stmt = $conn->prepare($baseQuery . " WHERE u.FullName LIKE ? OR o.OrderStatus LIKE ? OR o.OrderCode LIKE ? OR o.OrderID = ?
                             ORDER BY o.OrderID DESC");
     $like = "%$search%";
     $orderIdSearch = is_numeric($search) ? (int)$search : -1;
-    $stmt->bind_param("ssi", $like, $like, $orderIdSearch);
+    $stmt->bind_param("sssi", $like, $like, $like, $orderIdSearch);
     $stmt->execute();
     $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
@@ -111,7 +115,7 @@ if ($search !== "") {
     <?php if ($message): ?><div class="admin-alert success"><?= htmlspecialchars($message) ?></div><?php endif; ?>
 
     <div class="card">
-        <h2 class="section-title"><?= $editOrder ? "Edit Order #" . $editOrder['OrderID'] : "Create New Order" ?></h2>
+        <h2 class="section-title"><?= $editOrder ? "Edit Order #" . htmlspecialchars($editOrder['OrderCode'] ?? $editOrder['OrderID']) : "Create New Order" ?></h2>
         <form method="POST" action="orders.php">
             <input type="hidden" name="action" value="<?= $editOrder ? 'update' : 'create' ?>">
             <?php if ($editOrder): ?><input type="hidden" name="OrderID" value="<?= $editOrder['OrderID'] ?>"><?php endif; ?>
@@ -174,7 +178,7 @@ if ($search !== "") {
             <?php if (count($orders) === 0): ?><tr><td colspan="7">No orders found.</td></tr><?php endif; ?>
             <?php foreach ($orders as $o): ?>
             <tr>
-                <td>#<?= $o['OrderID'] ?></td>
+                <td>#<?= htmlspecialchars($o['OrderCode'] ?? $o['OrderID']) ?></td>
                 <td><?= htmlspecialchars($o['CustomerName']) ?></td>
                 <td><?= $o['OrderDate'] ?></td>
                 <td><?= htmlspecialchars($o['OrderStatus']) ?></td>
@@ -193,7 +197,7 @@ if ($search !== "") {
     <?php if ($viewItems !== null): ?>
     <br>
     <div class="card">
-        <h2 class="section-title">Items in Order #<?= htmlspecialchars($viewOrderId) ?></h2>
+        <h2 class="section-title">Items in Order #<?= htmlspecialchars($viewOrderCode ?? $viewOrderId) ?></h2>
         <table class="admin-table">
             <tr><th>Cake</th><th>Flavor</th><th>Layers</th><th>Icing</th><th>Filling</th><th>Decorations</th><th>Cake Text</th><th>Qty</th><th>Price</th></tr>
             <?php if (count($viewItems) === 0): ?><tr><td colspan="9">No items found.</td></tr><?php endif; ?>

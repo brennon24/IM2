@@ -106,7 +106,7 @@ if ($search !== "") {
         </form>
 
         <table class="admin-table">
-            <tr><th>ID</th><th>Cake</th><th>Customer</th><th>Rating</th><th>Review</th><th>Actions</th></tr>
+            <tr><th>ID</th><th>Review Type</th><th>Customer</th><th>Rating</th><th>Review</th><th>Actions</th></tr>
             <?php if (count($reviews) === 0): ?><tr><td colspan="6">No reviews found.</td></tr><?php endif; ?>
             <?php foreach ($reviews as $r): ?>
             <tr>

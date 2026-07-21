@@ -35,7 +35,7 @@ if (isset($_GET['delete'])) {
 }
 
 // ---------- Orders without a payment (for Create dropdown) ----------
-$openOrders = $conn->query("SELECT o.OrderID, u.FullName FROM `ORDER` o
+$openOrders = $conn->query("SELECT o.OrderID, o.OrderCode, u.FullName FROM `ORDER` o
                             JOIN USER_ACCOUNT u ON o.CustomerID = u.UserID
                             LEFT JOIN PAYMENT p ON o.OrderID = p.OrderID
                             WHERE p.PaymentID IS NULL
@@ -112,7 +112,7 @@ if ($search !== "") {
                     <select name="OrderID" required>
                         <option value="">-- Select Order (unpaid only) --</option>
                         <?php foreach ($openOrders as $o): ?>
-                            <option value="<?= $o['OrderID'] ?>">Order #<?= $o['OrderID'] ?> — <?= htmlspecialchars($o['FullName']) ?></option>
+                            <option value="<?= $o['OrderID'] ?>">Order #<?= htmlspecialchars($o['OrderCode'] ?? $o['OrderID']) ?> — <?= htmlspecialchars($o['FullName']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 <?php endif; ?>
@@ -167,7 +167,7 @@ if ($search !== "") {
             <?php foreach ($payments as $p): ?>
             <tr>
                 <td><?= $p['PaymentID'] ?></td>
-                <td>#<?= $p['OrderID'] ?></td>
+                <td>#<?= htmlspecialchars($p['OrderCode'] ?? $p['OrderID']) ?></td>
                 <td><?= htmlspecialchars($p['CustomerName']) ?></td>
                 <td><?= htmlspecialchars($p['PaymentMethod']) ?></td>
                 <td><?= htmlspecialchars($p['PaymentStatus']) ?></td>

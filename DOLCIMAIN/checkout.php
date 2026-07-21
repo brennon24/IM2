@@ -155,7 +155,7 @@ function decodeMaybeJson($value) {
           const result = await res.json();
           
           if (result.success) {
-            alert("Order placed successfully! Your order ID is #" + result.orderId);
+            alert("Order placed successfully! Your order number is #" + (result.orderCode || result.orderId));
             window.location.href = "dashboard.php"; 
           } else {
             alert(result.message || "Failed to place order.");

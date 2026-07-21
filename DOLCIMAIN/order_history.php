@@ -8,7 +8,7 @@ if (!isset($_SESSION['UserID'])) {
 }
 
 // Fetch all orders for this customer
- $stmt = $conn->prepare("SELECT * FROM `ORDER` WHERE CustomerID = ? ORDER BY OrderDate DESC");
+ $stmt = $conn->prepare("SELECT OrderID, OrderCode, CustomerID, OrderDate, CustomNote, OrderStatus, PaymentMethod FROM `ORDER` WHERE CustomerID = ? ORDER BY OrderDate DESC");
  $stmt->bind_param("i", $_SESSION['UserID']);
  $stmt->execute();
  $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -82,7 +82,7 @@ if (!isset($_SESSION['UserID'])) {
             <div class="card" style="max-width: 800px; margin: 0 auto 30px auto;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--pink-soft); padding-bottom: 10px;">
                     <div>
-                        <h3 style="margin: 0; color: var(--pink-bubble); font-family: var(--font-display);">Order #<?= $o['OrderID'] ?></h3>
+                        <h3 style="margin: 0; color: var(--pink-bubble); font-family: var(--font-display);">Order #<?= htmlspecialchars($o['OrderCode'] ?? $o['OrderID']) ?></h3>
                         <small style="color: var(--cocoa-soft);"><?= date('F j, Y \a\t g:i A', strtotime($o['OrderDate'])) ?></small>
                     </div>
                     <span class="order-status status-<?= strtolower(htmlspecialchars($o['OrderStatus'])) ?>">

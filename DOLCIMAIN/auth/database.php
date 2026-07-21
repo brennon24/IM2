@@ -13,6 +13,23 @@ if ($conn->connect_error) {
  $conn->query("CREATE DATABASE IF NOT EXISTS `{$database}`");
  $conn->select_db($database);
 
+function generateUniqueOrderCode($conn) {
+    for ($attempt = 0; $attempt < 10; $attempt++) {
+        $code = str_pad((string) random_int(10000, 99999), 5, '0', STR_PAD_LEFT);
+        $check = $conn->prepare("SELECT 1 FROM `ORDER` WHERE OrderCode = ?");
+        $check->bind_param("s", $code);
+        $check->execute();
+        $exists = $check->get_result()->num_rows > 0;
+        $check->close();
+
+        if (!$exists) {
+            return $code;
+        }
+    }
+
+    throw new RuntimeException("Unable to generate a unique order code.");
+}
+
  $schemaStatements = [
     "CREATE TABLE IF NOT EXISTS USER_ACCOUNT (
         UserID INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,6 +75,7 @@ if ($conn->connect_error) {
     )",
     "CREATE TABLE IF NOT EXISTS `ORDER` (
         OrderID INT AUTO_INCREMENT PRIMARY KEY,
+        OrderCode VARCHAR(10) NOT NULL UNIQUE,
         CustomerID INT NOT NULL,
         OrderDate DATETIME DEFAULT CURRENT_TIMESTAMP,
         CustomNote TEXT,
@@ -96,7 +114,7 @@ if ($conn->connect_error) {
     )",
     "CREATE TABLE IF NOT EXISTS REVIEW (
         ReviewID INT AUTO_INCREMENT PRIMARY KEY,
-        CakeID INT NOT NULL,
+        CakeID INT NULL,
         UserID INT NOT NULL,
         RatingEmoji VARCHAR(10),
         ReviewText TEXT,
@@ -112,6 +130,32 @@ foreach ($schemaStatements as $sql) {
     $conn->query($sql);
 }
 
+$ordersTableCheck = $conn->query("SHOW COLUMNS FROM `ORDER` LIKE 'OrderCode'");
+if ($ordersTableCheck && $ordersTableCheck->num_rows == 0) {
+    $conn->query("ALTER TABLE `ORDER` ADD COLUMN OrderCode VARCHAR(10) NOT NULL DEFAULT '' AFTER OrderID");
+}
+
+$ordersWithoutCode = $conn->query("SELECT OrderID FROM `ORDER` WHERE OrderCode = ''");
+if ($ordersWithoutCode) {
+    while ($row = $ordersWithoutCode->fetch_assoc()) {
+        $code = generateUniqueOrderCode($conn);
+        $stmt = $conn->prepare("UPDATE `ORDER` SET OrderCode = ? WHERE OrderID = ?");
+        $stmt->bind_param("si", $code, $row['OrderID']);
+        $stmt->execute();
+        $stmt->close();
+    }
+}
+
+$uniqueOrderCodeIndex = $conn->query("SHOW INDEX FROM `ORDER` WHERE Column_name = 'OrderCode'");
+if ($uniqueOrderCodeIndex && $uniqueOrderCodeIndex->num_rows == 0) {
+    $conn->query("ALTER TABLE `ORDER` ADD UNIQUE INDEX OrderCode (OrderCode)");
+}
+
+$reviewTableCheck = $conn->query("SHOW TABLES LIKE 'REVIEW'");
+if ($reviewTableCheck && $reviewTableCheck->num_rows > 0) {
+    $conn->query("ALTER TABLE REVIEW MODIFY CakeID INT NULL");
+}
+
  $menuCheck = $conn->query("SELECT COUNT(*) AS count FROM CAKE_MENU");
 if ($menuCheck && $menuCheck->fetch_assoc()['count'] == 0) {
     $conn->query("INSERT INTO CAKE_MENU (CakeName, Flavor, Filling, Size, Price) VALUES
@@ -120,5 +164,18 @@ if ($menuCheck && $menuCheck->fetch_assoc()['count'] == 0) {
         ('Strawberry Cake','Strawberry','Fresh Strawberries','8 inch',600),
         ('Red Velvet Cake','Red Velvet','Cream Cheese','8 inch',650),
         ('Mango Cake','Mango','Mango Cream','8 inch',600)");
+}
+
+$adminCheck = $conn->query("SELECT COUNT(*) AS count FROM ADMIN");
+if ($adminCheck && $adminCheck->fetch_assoc()['count'] == 0) {
+    $defaultAdminName = 'Administrator';
+    $defaultAdminEmail = 'admin@dolci.com';
+    $defaultAdminPasswordHash = password_hash('admin123', PASSWORD_DEFAULT);
+    $defaultAdminRole = 'Admin';
+
+    $stmt = $conn->prepare("INSERT INTO ADMIN (AdminName, Email, Password, Role) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $defaultAdminName, $defaultAdminEmail, $defaultAdminPasswordHash, $defaultAdminRole);
+    $stmt->execute();
+    $stmt->close();
 }
 ?>
